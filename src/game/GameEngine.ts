@@ -404,13 +404,16 @@ export class GameEngine {
   // ── Input ─────────────────────────────────────────────────────────────────
 
   private onKeyDown(e: KeyboardEvent) {
-    if (this.state.phase === 'idle' || this.state.phase === 'over') {
-      if (e.code === 'Space' || e.code === 'Enter') {
-        e.preventDefault()
-        this.start()
-      }
-      return
+    // Ignore game keys while a form field has focus — otherwise typing a space
+    // in the intake form fires preventDefault() and the user can't type spaces.
+    const t = e.target as HTMLElement | null
+    if (t) {
+      const tag = t.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable) return
     }
+    // Only react to game controls while the run is active. Pre-run / post-run
+    // navigation is handled at the App-level screen router, not here.
+    if (this.state.phase !== 'running') return
     switch (e.code) {
       case 'ArrowLeft':
       case 'KeyA':
