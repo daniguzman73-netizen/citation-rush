@@ -6,7 +6,7 @@ import IntakeScreen from './screens/IntakeScreen'
 import TutorialScreen from './screens/TutorialScreen'
 import CountdownScreen from './screens/CountdownScreen'
 import ResultsScreen from './screens/ResultsScreen'
-import DemoPlaceholder from './screens/DemoPlaceholder'
+import NexusRevealScreen, { DEFAULT_SCENARIO } from './screens/NexusRevealScreen'
 import LeaderboardScreen from './screens/LeaderboardScreen'
 import AdminPanel from './components/AdminPanel'
 import { useIdleReset } from './hooks/useIdleReset'
@@ -138,7 +138,11 @@ export default function App() {
         />
       )}
       {screen === 'demo' && (
-        <DemoPlaceholder onBack={handleResetToWelcome} onSeeLeaderboard={handleSeeLeaderboard} />
+        <NexusRevealScreen
+          scenario={DEFAULT_SCENARIO}
+          institution={player?.institution ?? null}
+          onContinue={handleSeeLeaderboard}
+        />
       )}
       {screen === 'leaderboard' && (
         <LeaderboardScreen

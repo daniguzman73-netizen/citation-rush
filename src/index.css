@@ -1,5 +1,38 @@
 @import "tailwindcss";
 
+/* Theme tokens — Tailwind v4 picks these up automatically.
+   Colors: `bg-nexus-red`, `text-nexus-red`, etc. resolve to these values.
+   Animations: `animate-fade-in`, `animate-slide-up` resolve to the keyframes below. */
+@theme {
+  --color-nexus-red:      #C8102E;
+  --color-nexus-red-dark: #A50D25;
+
+  --animate-fade-in:  fadeIn 0.25s ease-out both;
+  --animate-slide-up: slideUp 0.25s ease-out both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to   { opacity: 1 }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px) }
+  to   { opacity: 1; transform: translateY(0)    }
+}
+
+/* Custom utilities — ported from Citation Challenge for the Nexus reveal screen. */
+@utility kiosk-full {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+@utility touch-target {
+  min-height: 60px;
+  min-width: 60px;
+}
+
 html, body, #root {
   width: 100%;
   height: 100%;

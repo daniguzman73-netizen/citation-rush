@@ -1,0 +1,446 @@
+[
+  {
+    "id": "psych_001",
+    "disciplineId": "psychology",
+    "question": "What does recent research say about the relationship between social media use and adolescent mental health?",
+    "ai_response": "Recent research presents a complex picture of how social media affects adolescent mental health. Several large-scale studies have found correlations between heavy social media use and increased rates of anxiety and depression in teenagers, particularly among adolescent girls [1]. However, the relationship is not straightforward — moderating factors such as the type of platform, content consumed, and individual vulnerability appear to play significant roles [2].\n\nA 2023 longitudinal analysis suggested that passive scrolling is more strongly linked to negative outcomes than active engagement [3], while other work has emphasized the protective role of online peer support for marginalized youth [4]. More recent neuroimaging studies have begun to identify potential neural correlates of habitual social media checking in adolescents [5], though these findings remain preliminary.\n\nOverall, the evidence suggests that how adolescents use social media matters more than whether they use it.",
+    "citations": [
+      {
+        "id": 1, "status": "verified",
+        "authors": "Orben, A., Przybylski, A. K., Blakemore, S. J., & Kievit, R. A.",
+        "year": 2022,
+        "title": "Windows of developmental sensitivity to social media",
+        "journal": "Nature Communications",
+        "volume_issue": "13(1)",
+        "doi": "10.1038/s41467-022-29296-3",
+        "display": "Orben, A., Przybylski, A. K., Blakemore, S. J., & Kievit, R. A. (2022). Windows of developmental sensitivity to social media. Nature Communications, 13(1).",
+        "nexus_message": "Verified in Web of Science. Open access — available to all.",
+        "alternatives": []
+      },
+      {
+        "id": 2, "status": "predatory",
+        "authors": "Hartmann, R. & Kowalski, P.",
+        "year": 2024,
+        "title": "Differential Pathways from Social Media Engagement to Adolescent Psychopathology: A Multi-Mediator Framework",
+        "journal": "International Journal of Advanced Behavioral Sciences Research",
+        "volume_issue": "11(3), 482–501",
+        "doi": null,
+        "display": "Hartmann, R. & Kowalski, P. (2024). Differential Pathways from Social Media Engagement to Adolescent Psychopathology: A Multi-Mediator Framework. International Journal of Advanced Behavioral Sciences Research, 11(3), 482–501.",
+        "nexus_message": "Journal not indexed in Web of Science. Publisher appears on predatory journal watchlists.",
+        "alternatives": [
+          {"display": "Twenge, J. M., et al. (2023). Increases in depression, self-harm, and suicide among U.S. adolescents. Journal of Abnormal Psychology.", "access": "library"},
+          {"display": "Valkenburg, P. M. (2022). Social media use and well-being. Current Opinion in Psychology.", "access": "library"}
+        ]
+      },
+      {
+        "id": 3, "status": "preprint",
+        "authors": "Chen, L., Nakamura, Y., & Patel, S.",
+        "year": 2023,
+        "title": "Passive Versus Active Social Media Engagement and Longitudinal Mood Outcomes in Adolescents: A Three-Year Cohort Study",
+        "journal": "PsyArXiv (preprint)",
+        "volume_issue": "Preprint",
+        "doi": "10.31234/osf.io/4hkvd",
+        "display": "Chen, L., Nakamura, Y., & Patel, S. (2023). Passive Versus Active Social Media Engagement and Longitudinal Mood Outcomes in Adolescents: A Three-Year Cohort Study. PsyArXiv.",
+        "nexus_message": "Preprint on PsyArXiv — not yet peer-reviewed.",
+        "alternatives": []
+      },
+      {
+        "id": 4, "status": "inaccessible",
+        "authors": "Ahmadi, F. & Lindqvist, E.",
+        "year": 2024,
+        "title": "Online Communities as Protective Spaces for LGBTQ+ Youth: A Qualitative Study",
+        "journal": "Journal of Adolescent Identity and Wellbeing",
+        "volume_issue": "8(2), 145–167",
+        "doi": "10.5481/jaiw.2024.0089",
+        "display": "Ahmadi, F. & Lindqvist, E. (2024). Online Communities as Protective Spaces for LGBTQ+ Youth: A Qualitative Study. Journal of Adolescent Identity and Wellbeing, 8(2), 145–167.",
+        "nexus_message": "Verified — but not available through most library entitlements.",
+        "alternatives": [
+          {"display": "Craig, S. L., et al. (2023). LGBTQ+ youth and digital spaces: A systematic review. Journal of Youth Studies.", "access": "library"}
+        ]
+      },
+      {
+        "id": 5, "status": "unverified",
+        "authors": "Gonzalez-Reeves, M., Thornton, K. A., & Liu, W.",
+        "year": 2024,
+        "title": "Habitual Checking Behavior and Default Mode Network Connectivity in Adolescents: An fMRI Study",
+        "journal": "Developmental Cognitive Neuroscience",
+        "volume_issue": "67, Article 101342",
+        "doi": "10.1016/j.dcn.2024.101342",
+        "display": "Gonzalez-Reeves, M., Thornton, K. A., & Liu, W. (2024). Habitual Checking Behavior and Default Mode Network Connectivity in Adolescents: An fMRI Study. Developmental Cognitive Neuroscience, 67, Article 101342.",
+        "nexus_message": "Not found in Web of Science or Central Discovery Index. Possible hallucination.",
+        "alternatives": []
+      }
+    ],
+    "library_services": { "subject_specialist": "Dr. Sarah Chen", "research_guide": "Mental Health & Adolescence" }
+  },
+  {
+    "id": "life_001",
+    "disciplineId": "life_sciences",
+    "question": "What are the latest findings on CRISPR gene editing for treating inherited diseases?",
+    "ai_response": "CRISPR-Cas9 gene editing has achieved landmark results in the treatment of inherited blood disorders. A pivotal clinical trial demonstrated that patients with sickle cell disease achieved functional remission following targeted editing of the BCL11A enhancer region [1]. More recent work has extended these approaches to other monogenic disorders, including Duchenne muscular dystrophy [2].\n\nA 2024 preprint from a major genomics consortium described a high-fidelity base-editing strategy that reduces off-target edits by over 90% compared to standard Cas9 nucleases [3], though replication studies are pending. The cost of approved CRISPR therapies — exceeding $2 million per patient — raises profound equity concerns that are inadequately addressed in the clinical literature [4]. Regulatory frameworks for somatic versus germline editing remain under active revision, with international consensus still lacking [5].",
+    "citations": [
+      {
+        "id": 1, "status": "verified",
+        "authors": "Frangoul, H., Altshuler, D., Cappellini, M. D., et al.",
+        "year": 2021,
+        "title": "CRISPR-Cas9 Gene Editing for Sickle Cell Disease and β-Thalassemia",
+        "journal": "New England Journal of Medicine",
+        "volume_issue": "384(3), 252–260",
+        "doi": "10.1056/NEJMoa2031054",
+        "display": "Frangoul, H., et al. (2021). CRISPR-Cas9 gene editing for sickle cell disease and β-thalassemia. New England Journal of Medicine, 384(3), 252–260.",
+        "nexus_message": "Verified in Web of Science. Highly cited. Available via your library.",
+        "alternatives": []
+      },
+      {
+        "id": 2, "status": "predatory",
+        "authors": "Okafor, B. & Reinholt, S.",
+        "year": 2024,
+        "title": "CRISPR Applications in Neuromuscular Disease: A Comprehensive Review",
+        "journal": "Global Journal of Advanced Gene Therapy Research",
+        "volume_issue": "9(2), 115–134",
+        "doi": null,
+        "display": "Okafor, B. & Reinholt, S. (2024). CRISPR applications in neuromuscular disease: A comprehensive review. Global Journal of Advanced Gene Therapy Research, 9(2), 115–134.",
+        "nexus_message": "Journal not indexed in Web of Science. Publisher flagged on predatory journal lists.",
+        "alternatives": [
+          {"display": "Duan, D. (2023). Systemic AAV micro-dystrophin gene therapy for Duchenne muscular dystrophy. Molecular Therapy.", "access": "library"},
+          {"display": "Min, Y. L., et al. (2022). CRISPR-Cas9 corrects Duchenne muscular dystrophy exon 44 deletion mutations. Science Advances.", "access": "library"}
+        ]
+      },
+      {
+        "id": 3, "status": "preprint",
+        "authors": "Zhang, R., Hoffman, C., & Mbeki, P.",
+        "year": 2024,
+        "title": "Ultra-High-Fidelity Base Editing Reduces CRISPR Off-Target Events in Primary Human Cells",
+        "journal": "bioRxiv (preprint)",
+        "volume_issue": "Preprint",
+        "doi": "10.1101/2024.02.15.580512",
+        "display": "Zhang, R., Hoffman, C., & Mbeki, P. (2024). Ultra-high-fidelity base editing reduces CRISPR off-target events in primary human cells. bioRxiv.",
+        "nexus_message": "Preprint on bioRxiv — peer review not yet completed.",
+        "alternatives": []
+      },
+      {
+        "id": 4, "status": "inaccessible",
+        "authors": "Patel, K. & Sorensen, A.",
+        "year": 2023,
+        "title": "Equity Implications of Next-Generation Gene Therapies: Access, Pricing, and Structural Barriers",
+        "journal": "Journal of Health Equity and Precision Medicine",
+        "volume_issue": "5(1), 22–41",
+        "doi": "10.1234/jhepm.2023.005",
+        "display": "Patel, K. & Sorensen, A. (2023). Equity implications of next-generation gene therapies: Access, pricing, and structural barriers. Journal of Health Equity and Precision Medicine, 5(1), 22–41.",
+        "nexus_message": "Verified — but not available through most library entitlements.",
+        "alternatives": [
+          {"display": "Garrison, N. A., et al. (2022). Genomics, diversity, and social justice. Genetics in Medicine.", "access": "library"}
+        ]
+      },
+      {
+        "id": 5, "status": "unverified",
+        "authors": "Whitmore, J. L., Chen, A., & Bakr, S.",
+        "year": 2024,
+        "title": "In Vivo Germline Correction of Heritable Retinal Dystrophies Using CRISPR Prime Editing",
+        "journal": "Nature Medicine",
+        "volume_issue": "30, Article 4421",
+        "doi": "10.1038/s41591-024-04421-x",
+        "display": "Whitmore, J. L., Chen, A., & Bakr, S. (2024). In vivo germline correction of heritable retinal dystrophies using CRISPR prime editing. Nature Medicine, 30, Article 4421.",
+        "nexus_message": "Not found in Web of Science or PubMed. Article does not appear to exist.",
+        "alternatives": []
+      }
+    ],
+    "library_services": { "subject_specialist": "Dr. James Okafor", "research_guide": "Genomics & Genetic Medicine" }
+  },
+  {
+    "id": "hum_001",
+    "disciplineId": "humanities",
+    "question": "How did the printing press transform political discourse in early modern Europe?",
+    "ai_response": "The introduction of Gutenberg's movable type press fundamentally altered the production and circulation of political ideas in early modern Europe. By dramatically reducing the cost of reproducing texts, printing enabled the rapid dissemination of reform pamphlets and anti-clerical literature that would have been impossible under manuscript culture [1]. Scholars have documented how Martin Luther's theses circulated across the German-speaking world within weeks of their composition [2].\n\nA recent computational analysis of pamphlet distribution networks argues that Protestant communication strategies were more geographically targeted than previously recognized [3], though this study has not yet appeared in a peer-reviewed venue. The relationship between printing and the consolidation of vernacular languages as vehicles of political authority has received renewed scholarly attention [4]. Critics of the 'print capitalism' thesis argue that transformative effects have been overstated relative to continued manuscript and oral cultures [5].",
+    "citations": [
+      {
+        "id": 1, "status": "verified",
+        "authors": "Eisenstein, E. L.",
+        "year": 1979,
+        "title": "The Printing Press as an Agent of Change",
+        "journal": "Cambridge University Press (book)",
+        "volume_issue": "2 vols.",
+        "doi": "10.1017/CBO9781107049963",
+        "display": "Eisenstein, E. L. (1979/2012). The Printing Press as an Agent of Change. Cambridge University Press.",
+        "nexus_message": "Verified. Foundational scholarly work. Available via your library.",
+        "alternatives": []
+      },
+      {
+        "id": 2, "status": "predatory",
+        "authors": "Richter, H. & Blanchard, A.",
+        "year": 2023,
+        "title": "The Reformation Pamphlet Wars: Speed, Reach, and Theological Impact",
+        "journal": "International Journal of Renaissance and Early Modern Studies",
+        "volume_issue": "14(1), 88–107",
+        "doi": null,
+        "display": "Richter, H. & Blanchard, A. (2023). The Reformation pamphlet wars: Speed, reach, and theological impact. International Journal of Renaissance and Early Modern Studies, 14(1), 88–107.",
+        "nexus_message": "Journal not indexed in major scholarly databases. Publisher flagged as predatory.",
+        "alternatives": [
+          {"display": "Pettegree, A. (2015). Brand Luther: 1517, Printing, and the Making of the Reformation. Penguin Press.", "access": "library"},
+          {"display": "Edwards, M. U. (1994). Printing, Propaganda, and Martin Luther. University of California Press.", "access": "library"}
+        ]
+      },
+      {
+        "id": 3, "status": "preprint",
+        "authors": "Vanderhoeven, L. & Kamau, T.",
+        "year": 2024,
+        "title": "Network Analysis of Reformation-Era Pamphlet Distribution: Evidence from 847 Digitized Imprints",
+        "journal": "SocArXiv (preprint)",
+        "volume_issue": "Preprint",
+        "doi": "10.31235/osf.io/wb7zk",
+        "display": "Vanderhoeven, L. & Kamau, T. (2024). Network analysis of Reformation-era pamphlet distribution: Evidence from 847 digitized imprints. SocArXiv.",
+        "nexus_message": "Preprint on SocArXiv — not yet peer-reviewed.",
+        "alternatives": []
+      },
+      {
+        "id": 4, "status": "inaccessible",
+        "authors": "Collington, P. D.",
+        "year": 2022,
+        "title": "Print, Sovereignty, and the Vernacular Turn in Sixteenth-Century Political Thought",
+        "journal": "Journal of the History of Ideas",
+        "volume_issue": "83(4), 541–568",
+        "doi": "10.1353/jhi.2022.0034",
+        "display": "Collington, P. D. (2022). Print, sovereignty, and the vernacular turn in sixteenth-century political thought. Journal of the History of Ideas, 83(4), 541–568.",
+        "nexus_message": "Verified — but not available through most library entitlements.",
+        "alternatives": [
+          {"display": "Hadfield, A. (2005). Shakespeare and Renaissance Politics. Arden Shakespeare.", "access": "library"}
+        ]
+      },
+      {
+        "id": 5, "status": "unverified",
+        "authors": "Mortensen, R. & Dubois, C.",
+        "year": 2024,
+        "title": "Censorship Networks and the Suppression of Heterodox Print in Counter-Reformation Italy",
+        "journal": "Renaissance Quarterly",
+        "volume_issue": "77(2), 389–427",
+        "doi": "10.1086/734551",
+        "display": "Mortensen, R. & Dubois, C. (2024). Censorship networks and the suppression of heterodox print in Counter-Reformation Italy. Renaissance Quarterly, 77(2), 389–427.",
+        "nexus_message": "Not found in JSTOR, Web of Science, or the journal's own archive. Possible hallucination.",
+        "alternatives": []
+      }
+    ],
+    "library_services": { "subject_specialist": "Dr. Elena Marchetti", "research_guide": "Early Modern European History" }
+  },
+  {
+    "id": "biz_001",
+    "disciplineId": "business",
+    "question": "What evidence exists for the long-term effects of minimum wage increases on employment?",
+    "ai_response": "The empirical literature on minimum wage effects has evolved considerably. The landmark Card and Krueger study of fast-food employment established that modest minimum wage increases need not cause disemployment, challenging earlier consensus [1]. More recent research using synthetic control methods and cross-border comparisons has largely supported these findings for small to moderate increases [2].\n\nHowever, a 2024 working paper circulated before peer review suggests that larger increases — above 80% of the local median wage — may trigger meaningful employment reductions among low-skilled workers [3]. The distributional effects of minimum wage policy, including impacts on hours worked and non-wage compensation, have been documented in a niche specialist outlet [4]. Macroeconomic modeling of a proposed federal minimum wage increase projects modest positive effects on consumer spending without significant job loss [5].",
+    "citations": [
+      {
+        "id": 1, "status": "verified",
+        "authors": "Card, D. & Krueger, A. B.",
+        "year": 1994,
+        "title": "Minimum Wages and Employment: A Case Study of the Fast-Food Industry in New Jersey and Pennsylvania",
+        "journal": "American Economic Review",
+        "volume_issue": "84(4), 772–793",
+        "doi": "10.3386/w4509",
+        "display": "Card, D. & Krueger, A. B. (1994). Minimum wages and employment: A case study of the fast-food industry in New Jersey and Pennsylvania. American Economic Review, 84(4), 772–793.",
+        "nexus_message": "Verified. Landmark study, highly cited. Available via your library.",
+        "alternatives": []
+      },
+      {
+        "id": 2, "status": "predatory",
+        "authors": "Fontaine, M. & Osei, K.",
+        "year": 2024,
+        "title": "Cross-Border Employment Dynamics Under Differential Minimum Wage Regimes: A Panel Study",
+        "journal": "Journal of Applied Economic and Labor Policy Research",
+        "volume_issue": "6(2), 44–69",
+        "doi": null,
+        "display": "Fontaine, M. & Osei, K. (2024). Cross-border employment dynamics under differential minimum wage regimes: A panel study. Journal of Applied Economic and Labor Policy Research, 6(2), 44–69.",
+        "nexus_message": "Journal not indexed in EconLit or Web of Science. Publisher flagged as predatory.",
+        "alternatives": [
+          {"display": "Dube, A., Lester, T. W., & Reich, M. (2010). Minimum wage effects across state borders. Review of Economics and Statistics.", "access": "library"},
+          {"display": "Cengiz, D., et al. (2019). The effect of minimum wages on low-wage jobs. Quarterly Journal of Economics.", "access": "library"}
+        ]
+      },
+      {
+        "id": 3, "status": "preprint",
+        "authors": "Halvorsen, B. & Torres, A.",
+        "year": 2024,
+        "title": "Threshold Effects in Minimum Wage Policy: Evidence from 22 States, 2016–2023",
+        "journal": "SSRN Working Paper",
+        "volume_issue": "Working Paper No. 4718234",
+        "doi": "10.2139/ssrn.4718234",
+        "display": "Halvorsen, B. & Torres, A. (2024). Threshold effects in minimum wage policy: Evidence from 22 states, 2016–2023. SSRN Working Paper.",
+        "nexus_message": "SSRN working paper — not yet peer-reviewed.",
+        "alternatives": []
+      },
+      {
+        "id": 4, "status": "inaccessible",
+        "authors": "Neumark, D. & Shirley, P.",
+        "year": 2022,
+        "title": "Myth or Measurement: What Does the New Minimum Wage Research Say?",
+        "journal": "Industrial Relations: A Journal of Economy and Society",
+        "volume_issue": "61(4), 384–417",
+        "doi": "10.1111/irel.12306",
+        "display": "Neumark, D. & Shirley, P. (2022). Myth or measurement: What does the new minimum wage research say? Industrial Relations: A Journal of Economy and Society, 61(4), 384–417.",
+        "nexus_message": "Verified — but not available through most library entitlements.",
+        "alternatives": [
+          {"display": "Manning, A. (2021). The elusive employment effect of the minimum wage. Journal of Economic Perspectives.", "access": "library"}
+        ]
+      },
+      {
+        "id": 5, "status": "unverified",
+        "authors": "Brandt, L. H., Washington, P., & Kim, S. Y.",
+        "year": 2024,
+        "title": "General Equilibrium Effects of a $17 Federal Minimum Wage: A Calibrated Model with Heterogeneous Workers",
+        "journal": "Journal of Political Economy",
+        "volume_issue": "132(8), 2104–2149",
+        "doi": "10.1086/728841",
+        "display": "Brandt, L. H., Washington, P., & Kim, S. Y. (2024). General equilibrium effects of a $17 federal minimum wage: A calibrated model with heterogeneous workers. Journal of Political Economy, 132(8), 2104–2149.",
+        "nexus_message": "Article not found in Web of Science or in the journal's published issues. Possible hallucination.",
+        "alternatives": []
+      }
+    ],
+    "library_services": { "subject_specialist": "Prof. Marcus Webb", "research_guide": "Labor Economics & Policy" }
+  },
+  {
+    "id": "law_001",
+    "disciplineId": "law_policy",
+    "question": "How have courts interpreted the Fourth Amendment in cases involving digital surveillance?",
+    "ai_response": "Fourth Amendment jurisprudence has undergone significant transformation in response to digital surveillance technologies. The Supreme Court's decision in Carpenter v. United States held that the government's warrantless acquisition of historical cell-site location information constitutes a Fourth Amendment search, marking a departure from the third-party doctrine [1]. Legal scholars have debated whether Carpenter signals a broader recalibration of digital privacy rights or a narrow technology-specific holding [2].\n\nA recent law review article argues that lower courts have inconsistently applied Carpenter to other forms of digital surveillance, including email metadata and real-time GPS tracking [3], though this article has not yet been formally published. The mosaic theory of the Fourth Amendment — the idea that aggregated data can constitute a search — has been elaborated in a specialist international journal [4]. Some commentators predict that the Court will soon address the constitutionality of algorithmic surveillance tools used by law enforcement [5].",
+    "citations": [
+      {
+        "id": 1, "status": "verified",
+        "authors": "Supreme Court of the United States",
+        "year": 2018,
+        "title": "Carpenter v. United States",
+        "journal": "United States Reports",
+        "volume_issue": "585 U.S. 296",
+        "doi": "Supreme Court — no DOI",
+        "display": "Carpenter v. United States, 585 U.S. 296 (2018). United States Supreme Court.",
+        "nexus_message": "Verified. Supreme Court decision. Freely available via Westlaw and public sources.",
+        "alternatives": []
+      },
+      {
+        "id": 2, "status": "predatory",
+        "authors": "Blackwood, T. & Guerrero, M.",
+        "year": 2024,
+        "title": "Digital Privacy After Carpenter: Third-Party Doctrine in the Age of Ubiquitous Data",
+        "journal": "International Journal of Cyber Law and Digital Governance",
+        "volume_issue": "3(1), 12–35",
+        "doi": null,
+        "display": "Blackwood, T. & Guerrero, M. (2024). Digital privacy after Carpenter: Third-party doctrine in the age of ubiquitous data. International Journal of Cyber Law and Digital Governance, 3(1), 12–35.",
+        "nexus_message": "Journal not indexed in HeinOnline, Westlaw, or LexisNexis. Publisher flagged as predatory.",
+        "alternatives": [
+          {"display": "Kerr, O. S. (2019). Implementing Carpenter. Michigan Law Review.", "access": "library"},
+          {"display": "Solove, D. J. (2020). The Digital Person: Technology and Privacy in the Information Age. NYU Press.", "access": "library"}
+        ]
+      },
+      {
+        "id": 3, "status": "preprint",
+        "authors": "Okonkwo, A. & Steinhardt, R.",
+        "year": 2024,
+        "title": "Carpenter's Uneven Legacy: A Study of 314 Post-2018 Digital Surveillance Rulings",
+        "journal": "SSRN (preprint)",
+        "volume_issue": "Preprint",
+        "doi": "10.2139/ssrn.4798112",
+        "display": "Okonkwo, A. & Steinhardt, R. (2024). Carpenter's uneven legacy: A study of 314 post-2018 digital surveillance rulings. SSRN.",
+        "nexus_message": "SSRN preprint — not yet peer-reviewed.",
+        "alternatives": []
+      },
+      {
+        "id": 4, "status": "inaccessible",
+        "authors": "Sweeney, R.",
+        "year": 2022,
+        "title": "Aggregation, Surveillance, and the Mosaic Theory of the Fourth Amendment",
+        "journal": "European Journal of International Law",
+        "volume_issue": "33(2), 411–438",
+        "doi": "10.1093/ejil/chac023",
+        "display": "Sweeney, R. (2022). Aggregation, surveillance, and the mosaic theory of the Fourth Amendment. European Journal of International Law, 33(2), 411–438.",
+        "nexus_message": "Verified — but not available through most library entitlements.",
+        "alternatives": [
+          {"display": "Gray, D. (2017). The Fourth Amendment in an Age of Surveillance. Cambridge University Press.", "access": "library"}
+        ]
+      },
+      {
+        "id": 5, "status": "unverified",
+        "authors": "Park, J., Alvarez, D., & Osei-Bonsu, K.",
+        "year": 2024,
+        "title": "Constitutional Constraints on Predictive Policing Algorithms: Post-Carpenter Doctrine and the Fourth Amendment",
+        "journal": "Yale Law Journal",
+        "volume_issue": "134(1), 88–156",
+        "doi": "10.2139/yalelj.2024.0145",
+        "display": "Park, J., Alvarez, D., & Osei-Bonsu, K. (2024). Constitutional constraints on predictive policing algorithms: Post-Carpenter doctrine and the Fourth Amendment. Yale Law Journal, 134(1), 88–156.",
+        "nexus_message": "Article not found in HeinOnline or the Yale Law Journal's own archive. Possible hallucination.",
+        "alternatives": []
+      }
+    ],
+    "library_services": { "subject_specialist": "Prof. Linda Chen", "research_guide": "Constitutional Law & Digital Rights" }
+  },
+  {
+    "id": "env_001",
+    "disciplineId": "environmental",
+    "question": "What are the measurable impacts of urban green spaces on local biodiversity?",
+    "ai_response": "Urban green spaces — including parks, street trees, green roofs, and urban wetlands — support meaningful biodiversity even within densely built environments. A comprehensive meta-analysis of 75 studies found that urban green space area is positively correlated with native plant species richness, particularly when spaces are connected and exceed one hectare in size [1]. Bird diversity has proven especially responsive to urban greening initiatives, with studies documenting rapid colonization by previously absent species [2].\n\nA 2024 preprint from a European urban ecology consortium reports that green roof networks can function as stepping-stone habitats for pollinators, increasing connectivity between fragmented urban populations [3], though formal publication is pending. A single-city longitudinal study in Singapore documented a 34% increase in native bee species over a decade of park expansion, though access to this work is limited [4]. Critics note that urban biodiversity metrics often overweight charismatic taxa while neglecting soil invertebrate and mycological communities [5].",
+    "citations": [
+      {
+        "id": 1, "status": "verified",
+        "authors": "Beninde, J., Veith, M., & Hochkirch, A.",
+        "year": 2015,
+        "title": "Biodiversity in Cities Needs Space: A Meta-Analysis of Factors Determining Intra-Urban Biodiversity Variation",
+        "journal": "Ecology Letters",
+        "volume_issue": "18(6), 581–592",
+        "doi": "10.1111/ele.12427",
+        "display": "Beninde, J., Veith, M., & Hochkirch, A. (2015). Biodiversity in cities needs space: A meta-analysis of factors determining intra-urban biodiversity variation. Ecology Letters, 18(6), 581–592.",
+        "nexus_message": "Verified in Web of Science. Highly cited. Available via your library.",
+        "alternatives": []
+      },
+      {
+        "id": 2, "status": "predatory",
+        "authors": "Akintola, F. & Schreiber, M.",
+        "year": 2024,
+        "title": "Avian Community Responses to Urban Greening in Mid-Sized North American Cities",
+        "journal": "Open Journal of Urban Ecology and Conservation Research",
+        "volume_issue": "7(3), 201–218",
+        "doi": null,
+        "display": "Akintola, F. & Schreiber, M. (2024). Avian community responses to urban greening in mid-sized North American cities. Open Journal of Urban Ecology and Conservation Research, 7(3), 201–218.",
+        "nexus_message": "Journal not indexed in Web of Science or Scopus. Publisher flagged as predatory.",
+        "alternatives": [
+          {"display": "Chace, J. F. & Walsh, J. J. (2006). Urban effects on native avifauna: A review. Landscape and Urban Planning.", "access": "library"},
+          {"display": "Marzluff, J. M. (2014). Welcome to Subirdia. Yale University Press.", "access": "library"}
+        ]
+      },
+      {
+        "id": 3, "status": "preprint",
+        "authors": "Dijkstra, E., Müller, K., & Stavros, N.",
+        "year": 2024,
+        "title": "Green Roof Connectivity and Urban Pollinator Networks: A Landscape Genetics Approach",
+        "journal": "bioRxiv (preprint)",
+        "volume_issue": "Preprint",
+        "doi": "10.1101/2024.05.22.595789",
+        "display": "Dijkstra, E., Müller, K., & Stavros, N. (2024). Green roof connectivity and urban pollinator networks: A landscape genetics approach. bioRxiv.",
+        "nexus_message": "Preprint on bioRxiv — not yet peer-reviewed.",
+        "alternatives": []
+      },
+      {
+        "id": 4, "status": "inaccessible",
+        "authors": "Lim, H. C. & Tan, S. B.",
+        "year": 2023,
+        "title": "Decade-Long Monitoring of Native Bee Diversity in Singapore's Urban Parks: Expansion, Contraction, and Resilience",
+        "journal": "Urban Ecosystems",
+        "volume_issue": "26(4), 1089–1104",
+        "doi": "10.1007/s11252-023-01396-y",
+        "display": "Lim, H. C. & Tan, S. B. (2023). Decade-long monitoring of native bee diversity in Singapore's urban parks: Expansion, contraction, and resilience. Urban Ecosystems, 26(4), 1089–1104.",
+        "nexus_message": "Verified — but not available through most library entitlements.",
+        "alternatives": [
+          {"display": "Theodorou, P., et al. (2020). Urban areas as hotspots for bees and pollination. Nature Communications.", "access": "library"}
+        ]
+      },
+      {
+        "id": 5, "status": "unverified",
+        "authors": "Nwosu, C. E., Petersen, H., & Yamamoto, T.",
+        "year": 2024,
+        "title": "Soil Fungal Network Recovery Following Urban Rewilding: Evidence from 18 European Cities",
+        "journal": "Global Change Biology",
+        "volume_issue": "30(5), Article e7289",
+        "doi": "10.1111/gcb.17289",
+        "display": "Nwosu, C. E., Petersen, H., & Yamamoto, T. (2024). Soil fungal network recovery following urban rewilding: Evidence from 18 European cities. Global Change Biology, 30(5), Article e7289.",
+        "nexus_message": "Article not found in Web of Science or the journal's published issues. Possible hallucination.",
+        "alternatives": []
+      }
+    ],
+    "library_services": { "subject_specialist": "Dr. Maya Patel", "research_guide": "Urban Ecology & Biodiversity" }
+  }
+]
