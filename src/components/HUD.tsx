@@ -33,11 +33,47 @@ export default function HUD({ state }: Props) {
         </div>
       </div>
 
-      {/* Top-right: score */}
-      <div className="absolute top-4 right-4 bg-black/55 backdrop-blur rounded-lg px-4 py-2 text-white text-right">
-        <div className="text-[11px] uppercase tracking-widest text-neutral-400">Score</div>
-        <div className="text-3xl font-bold tabular-nums">{state.score}</div>
+      {/* Top-right: score + popups */}
+      <div className="absolute top-4 right-4 text-right">
+        <div className="bg-black/55 backdrop-blur rounded-lg px-4 py-2 text-white inline-block">
+          <div className="text-[11px] uppercase tracking-widest text-neutral-400">Score</div>
+          <div className="text-3xl font-bold tabular-nums">{state.score}</div>
+        </div>
+
+        <div className="relative h-0">
+          {state.popups.map((p, i) => {
+            const fade = Math.min(1, p.ttl / 0.9)
+            const rise = (1 - fade) * 48
+            const color = p.kind === 'collect' ? 'text-emerald-300' : 'text-red-300'
+            return (
+              <div
+                key={p.id}
+                className={`absolute right-0 mt-1 font-bold tabular-nums ${color}`}
+                style={{
+                  transform: `translateY(${-rise + i * 28}px)`,
+                  opacity: fade,
+                  textShadow: '0 0 12px rgba(0,0,0,0.6)',
+                  fontSize: '22px',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {p.value > 0 ? `+${p.value}` : `${p.value}`}
+              </div>
+            )
+          })}
+        </div>
       </div>
+
+      {/* Hit flash overlay */}
+      {state.hitFlash > 0 && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            boxShadow: `inset 0 0 ${120 * state.hitFlash}px ${40 * state.hitFlash}px rgba(239, 68, 68, ${0.65 * state.hitFlash})`,
+            border: `3px solid rgba(239, 68, 68, ${state.hitFlash})`,
+          }}
+        />
+      )}
     </div>
   )
 }

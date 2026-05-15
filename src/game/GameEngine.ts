@@ -26,6 +26,7 @@ import {
   type CitationType,
 } from './constants'
 import { createCardTextures, CARD_ASPECT } from './cardTexture'
+import { Audio } from '../audio/Audio'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public state shape
@@ -47,6 +48,13 @@ export interface RunStats {
 
 export type GamePhase = 'idle' | 'running' | 'over'
 
+export interface PopupEvent {
+  id: number
+  kind: 'collect' | 'hit'
+  value: number
+  ttl: number // seconds remaining before HUD prunes it
+}
+
 export interface GameState {
   phase: GamePhase
   timeRemaining: number  // seconds, clamped to [0, GAME_DURATION_S]
@@ -54,6 +62,8 @@ export interface GameState {
   hits: number
   endedBy: EndedBy | null
   stats: RunStats
+  hitFlash: number       // 0..1 fade amount; HUD renders an overlay when > 0
+  popups: PopupEvent[]
 }
 
 const emptyStats = (): RunStats => ({
@@ -75,6 +85,8 @@ const initialState = (): GameState => ({
   hits: 0,
   endedBy: null,
   stats: emptyStats(),
+  hitFlash: 0,
+  popups: [],
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -88,6 +100,20 @@ interface PoolEntry {
   airborne: boolean
   active: boolean
 }
+
+interface Particle {
+  sprite: THREE.Sprite
+  vx: number
+  vy: number
+  vz: number
+  life: number     // seconds remaining
+  maxLife: number
+  active: boolean
+}
+
+const PARTICLE_POOL_SIZE = 24
+const SHAKE_DURATION = 0.18
+const HIT_FLASH_DURATION = 0.35
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Engine
@@ -112,8 +138,17 @@ export class GameEngine {
   private cardTextures!: Record<CitationType, THREE.Texture>
   private trackGroup!: THREE.Group
 
+  private particles: Particle[] = []
+  private particleTexture!: THREE.Texture
+  private particleGoldMat!: THREE.SpriteMaterial
+  private particleRedMat!: THREE.SpriteMaterial
+
+  private cameraBasePos = new THREE.Vector3(0, 4.5, 7)
+  private shakeT = 0       // seconds remaining on screen shake
+
   private state: GameState = initialState()
   private subs = new Set<Subscriber>()
+  private nextPopupId = 1
 
   private spawnAccumulator = 0
   private lastFrameTime = 0
@@ -139,6 +174,7 @@ export class GameEngine {
     this.buildTrack()
     this.buildPlayer()
     this.buildPool()
+    this.buildParticles()
 
     this.boundKeyDown = (e) => this.onKeyDown(e)
     window.addEventListener('keydown', this.boundKeyDown)
@@ -171,7 +207,10 @@ export class GameEngine {
     this.playerY = PLAYER_Y_GROUND
     this.jumpT = -1
     this.spawnAccumulator = 0
+    this.shakeT = 0
+    this.camera.position.copy(this.cameraBasePos)
     this.deactivateAll()
+    for (const p of this.particles) { p.active = false; p.sprite.visible = false }
     this.emit()
 
     this.lastFrameTime = performance.now()
@@ -187,6 +226,9 @@ export class GameEngine {
       this.spriteMaterials[t].dispose()
       this.cardTextures[t].dispose()
     }
+    this.particleGoldMat?.dispose()
+    this.particleRedMat?.dispose()
+    this.particleTexture?.dispose()
     this.renderer.dispose()
   }
 
@@ -194,7 +236,10 @@ export class GameEngine {
   moveLeft(): void  { if (this.state.phase === 'running' && this.playerTargetLane > 0)             this.playerTargetLane -= 1 }
   moveRight(): void { if (this.state.phase === 'running' && this.playerTargetLane < LANE_COUNT - 1) this.playerTargetLane += 1 }
   jump(): void {
-    if (this.state.phase === 'running' && this.jumpT < 0) this.jumpT = 0
+    if (this.state.phase === 'running' && this.jumpT < 0) {
+      this.jumpT = 0
+      Audio.jump()
+    }
   }
 
   // ── Scene construction ────────────────────────────────────────────────────
@@ -251,6 +296,86 @@ export class GameEngine {
 
     this.player.position.set(this.playerX, this.playerY, PLAYER_Z)
     this.scene.add(this.player)
+  }
+
+  private buildParticles() {
+    // Soft circular glow texture, drawn once
+    const size = 64
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = size
+    const ctx = canvas.getContext('2d')!
+    const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+    grad.addColorStop(0, 'rgba(255,255,255,1)')
+    grad.addColorStop(0.4, 'rgba(255,255,255,0.6)')
+    grad.addColorStop(1, 'rgba(255,255,255,0)')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, size, size)
+    this.particleTexture = new THREE.CanvasTexture(canvas)
+
+    this.particleGoldMat = new THREE.SpriteMaterial({
+      map: this.particleTexture,
+      color: 0xfbbf24,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    this.particleRedMat = new THREE.SpriteMaterial({
+      map: this.particleTexture,
+      color: 0xef4444,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+
+    for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
+      const sprite = new THREE.Sprite(this.particleGoldMat)
+      sprite.scale.set(0.4, 0.4, 1)
+      sprite.visible = false
+      this.scene.add(sprite)
+      this.particles.push({ sprite, vx: 0, vy: 0, vz: 0, life: 0, maxLife: 0.5, active: false })
+    }
+  }
+
+  private emitParticles(at: THREE.Vector3, kind: 'collect' | 'hit', count = 8) {
+    const mat = kind === 'collect' ? this.particleGoldMat : this.particleRedMat
+    let emitted = 0
+    for (const p of this.particles) {
+      if (p.active || emitted >= count) continue
+      p.active = true
+      p.sprite.visible = true
+      p.sprite.material = mat
+      p.sprite.position.copy(at)
+      // random outward velocity
+      const theta = Math.random() * Math.PI * 2
+      const speed = 2 + Math.random() * 3
+      p.vx = Math.cos(theta) * speed
+      p.vy = 1.5 + Math.random() * 2.5
+      p.vz = Math.sin(theta) * speed * 0.5
+      p.maxLife = 0.55
+      p.life = p.maxLife
+      emitted++
+    }
+  }
+
+  private updateParticles(dt: number) {
+    for (const p of this.particles) {
+      if (!p.active) continue
+      p.life -= dt
+      if (p.life <= 0) {
+        p.active = false
+        p.sprite.visible = false
+        continue
+      }
+      // gravity & integration
+      p.vy -= 6 * dt
+      p.sprite.position.x += p.vx * dt
+      p.sprite.position.y += p.vy * dt
+      p.sprite.position.z += p.vz * dt
+      const fade = Math.max(0, p.life / p.maxLife)
+      p.sprite.material.opacity = fade
+      const s = 0.4 * (0.5 + 0.5 * fade)
+      p.sprite.scale.set(s, s, 1)
+    }
   }
 
   private buildPool() {
@@ -432,14 +557,25 @@ export class GameEngine {
       if (!(overlapX && overlapY && overlapZ)) continue
 
       // Collision!
+      const collisionPoint = new THREE.Vector3(ox, oy, oz)
       if (p.type === 'trusted') {
+        const value = CITATION_SPECS.trusted.scoreCollect
         this.state.stats.trusted_collected += 1
-        this.state.score += CITATION_SPECS.trusted.scoreCollect
+        this.state.score += value
+        this.pushPopup('collect', value)
+        this.emitParticles(collisionPoint, 'collect', 8)
+        Audio.coin()
       } else {
         const hitKey = `${p.type}_hit` as keyof RunStats
+        const value = CITATION_SPECS[p.type].scoreHit
         this.state.stats[hitKey] += 1
-        this.state.score += CITATION_SPECS[p.type].scoreHit
+        this.state.score += value
         this.state.hits += 1
+        this.pushPopup('hit', value)
+        this.emitParticles(collisionPoint, 'hit', 6)
+        this.shakeT = SHAKE_DURATION
+        this.state.hitFlash = 1
+        Audio.hit()
         if (this.state.hits >= MAX_HITS) {
           this.deactivate(p)
           this.endRun('hits')
@@ -447,6 +583,35 @@ export class GameEngine {
         }
       }
       this.deactivate(p)
+    }
+  }
+
+  private pushPopup(kind: 'collect' | 'hit', value: number) {
+    this.state.popups.push({ id: this.nextPopupId++, kind, value, ttl: 0.9 })
+    // hard cap to avoid runaway
+    if (this.state.popups.length > 6) this.state.popups.shift()
+  }
+
+  private updatePopups(dt: number) {
+    if (this.state.popups.length === 0) return
+    for (const e of this.state.popups) e.ttl -= dt
+    this.state.popups = this.state.popups.filter(e => e.ttl > 0)
+  }
+
+  private updateShakeAndFlash(dt: number) {
+    if (this.shakeT > 0) {
+      this.shakeT = Math.max(0, this.shakeT - dt)
+      const amp = (this.shakeT / SHAKE_DURATION) * 0.18
+      this.camera.position.set(
+        this.cameraBasePos.x + (Math.random() - 0.5) * amp * 2,
+        this.cameraBasePos.y + (Math.random() - 0.5) * amp * 2,
+        this.cameraBasePos.z,
+      )
+    } else {
+      this.camera.position.copy(this.cameraBasePos)
+    }
+    if (this.state.hitFlash > 0) {
+      this.state.hitFlash = Math.max(0, this.state.hitFlash - dt / HIT_FLASH_DURATION)
     }
   }
 
@@ -476,8 +641,13 @@ export class GameEngine {
       if (this.state.phase === 'running' && this.state.timeRemaining <= 0) {
         this.endRun('time')
       }
-      this.emit()
     }
+
+    // these continue ticking during freeze-frame on game over so particles/shake finish
+    this.updateParticles(dt)
+    this.updateShakeAndFlash(dt)
+    this.updatePopups(dt)
+    if (this.state.phase !== 'idle') this.emit()
 
     this.renderer.render(this.scene, this.camera)
   }
@@ -500,6 +670,8 @@ export class GameEngine {
       hits: this.state.hits,
       endedBy: this.state.endedBy,
       stats: { ...this.state.stats },
+      hitFlash: this.state.hitFlash,
+      popups: this.state.popups.slice(),
     }
     this.subs.forEach(fn => fn(snapshot))
   }

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import GameCanvas from './components/GameCanvas'
+import MuteToggle from './components/MuteToggle'
 import WelcomeScreen from './screens/WelcomeScreen'
 import IntakeScreen from './screens/IntakeScreen'
 import TutorialScreen from './screens/TutorialScreen'
@@ -82,6 +83,12 @@ export default function App() {
         />
       )}
       {screen === 'demo' && <DemoPlaceholder onBack={handleResetToWelcome} />}
+
+      {screen !== 'game' && screen !== 'countdown' && (
+        <div className="absolute bottom-4 left-4 z-10">
+          <MuteToggle />
+        </div>
+      )}
     </div>
   )
 }

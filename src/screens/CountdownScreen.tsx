@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Audio } from '../audio/Audio'
 
 interface Props { onDone: () => void }
 
@@ -9,6 +10,11 @@ export default function CountdownScreen({ onDone }: Props) {
   const [i, setI] = useState(0)
 
   useEffect(() => {
+    // play SFX for the *current* step on mount/change
+    if (i < STEPS.length) {
+      if (STEPS[i] === 'GO') Audio.go()
+      else Audio.tick()
+    }
     if (i >= STEPS.length) { onDone(); return }
     const t = setTimeout(() => setI(i + 1), TICK_MS)
     return () => clearTimeout(t)
