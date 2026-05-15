@@ -23,6 +23,7 @@ import {
   OBJECT_SIZE,
   AIRBORNE_Y,
   GROUND_Y,
+  MIN_SPAWN_GAP_Z,
   type CitationType,
 } from './constants'
 import { createCardTextures, CARD_ASPECT } from './cardTexture'
@@ -439,6 +440,16 @@ export class GameEngine {
     return TRACK_SPEED_START + (TRACK_SPEED_END - TRACK_SPEED_START) * Math.min(1, Math.max(0, t))
   }
 
+  private laneIsClear(lane: number): boolean {
+    // True if no active object in this lane is within MIN_SPAWN_GAP_Z of the spawn line.
+    for (const p of this.pool) {
+      if (!p.active) continue
+      if (p.lane !== lane) continue
+      if (p.sprite.position.z < SPAWN_Z + MIN_SPAWN_GAP_Z) return false
+    }
+    return true
+  }
+
   private spawnCitation(forceLane?: number): PoolEntry | null {
     const slot = this.pool.find(p => !p.active)
     if (!slot) return null
@@ -458,7 +469,18 @@ export class GameEngine {
       }
     }
 
-    const lane = forceLane ?? Math.floor(Math.random() * LANE_COUNT)
+    let lane: number
+    if (forceLane !== undefined) {
+      if (!this.laneIsClear(forceLane)) return null
+      lane = forceLane
+    } else {
+      // pick the first clear lane in a random order; bail if all three are too crowded
+      const candidates = [0, 1, 2].sort(() => Math.random() - 0.5)
+      const choice = candidates.find(l => this.laneIsClear(l))
+      if (choice === undefined) return null
+      lane = choice
+    }
+
     const airborne =
       !isTrusted &&
       CITATION_SPECS[type].airborneEligible &&

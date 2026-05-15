@@ -22,7 +22,11 @@ export const JUMP_PEAK = 1.6                // peak y above ground
 
 // Track speed (scrolling toward camera)
 export const TRACK_SPEED_START = 18
-export const TRACK_SPEED_END = 28           // at t=60s
+export const TRACK_SPEED_END = 26           // at t=60s — tuned down from 28 once card sprites replaced cubes (larger silhouette)
+
+// Spawn safety: don't spawn into a lane that already has an active object within this Z distance of SPAWN_Z.
+// Prevents pile-ups that the player cannot react to.
+export const MIN_SPAWN_GAP_Z = 6
 
 // Game rules
 export const GAME_DURATION_S = 60
@@ -78,8 +82,8 @@ export const SPAWN_PHASES: readonly SpawnPhase[] = [
   { untilSeconds: 20, spawnEverySeconds: 1.0,  trustedShare: 0.60, badTypes: ['predatory', 'paywalled'],         multiLaneChance: 0.0,  airborneChance: 0.0 },
   // 20–40s: medium — all 4 bad types, occasional 2-lane
   { untilSeconds: 40, spawnEverySeconds: 0.67, trustedShare: 0.50, badTypes: ALL_BAD_TYPES,                       multiLaneChance: 0.25, airborneChance: 0.0 },
-  // 40–60s: fast — multi-lane + airborne
-  { untilSeconds: 60, spawnEverySeconds: 0.50, trustedShare: 0.45, badTypes: ALL_BAD_TYPES,                       multiLaneChance: 0.40, airborneChance: 0.35 },
+  // 40–60s: fast — multi-lane + airborne (loosened slightly from 0.50s after cards-not-cubes increased visual density)
+  { untilSeconds: 60, spawnEverySeconds: 0.55, trustedShare: 0.45, badTypes: ALL_BAD_TYPES,                       multiLaneChance: 0.40, airborneChance: 0.35 },
 ]
 
 // Pool size — one geometry, many instances; sized for worst-case 2/s × ~5s in flight × 2-lane = 20
