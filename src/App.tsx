@@ -9,12 +9,15 @@ import ResultsScreen from './screens/ResultsScreen'
 import DemoPlaceholder from './screens/DemoPlaceholder'
 import type { Screen, PlayerInfo, FinalResult } from './types'
 import type { GameEngine } from './game/GameEngine'
+import { storage } from './storage'
+import { GAME_DURATION_S } from './game/constants'
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('welcome')
   const [player, setPlayer] = useState<PlayerInfo | null>(null)
   const [result, setResult] = useState<FinalResult | null>(null)
   const engineRef = useRef<GameEngine | null>(null)
+  const runStartedAtRef = useRef<number>(0)
 
   const handleStart = useCallback(() => setScreen('intake'), [])
   const handleSkipToDemo = useCallback(() => setScreen('demo'), [])
@@ -28,6 +31,7 @@ export default function App() {
 
   const handleCountdownDone = useCallback(() => {
     setScreen('game')
+    runStartedAtRef.current = Date.now()
     // start the engine on the next frame so the canvas is mounted
     requestAnimationFrame(() => engineRef.current?.start())
   }, [])
@@ -35,7 +39,27 @@ export default function App() {
   const handleRunEnd = useCallback((final: FinalResult) => {
     setResult(final)
     setScreen('results')
-  }, [])
+
+    // Persist the run. Fire-and-forget — backend swallows storage errors and the
+    // results screen renders from `final` directly, not from storage.
+    if (player && final.endedBy) {
+      const endedAt = Date.now()
+      const startedAt = runStartedAtRef.current || endedAt - GAME_DURATION_S * 1000
+      const survivedSeconds = Math.max(0, Math.min(GAME_DURATION_S, Math.floor(GAME_DURATION_S - final.timeRemaining)))
+      void storage.saveRun({
+        name: player.name,
+        institution: player.institution,
+        email: player.email,
+        optedIn: player.optedIn,
+        startedAt,
+        endedAt,
+        score: Math.max(0, final.score),
+        survivedSeconds,
+        endedBy: final.endedBy,
+        stats: final.stats,
+      })
+    }
+  }, [player])
 
   const handleSeeNexus = useCallback(() => setScreen('demo'), [])
   const handlePlayAgain = useCallback(() => {
