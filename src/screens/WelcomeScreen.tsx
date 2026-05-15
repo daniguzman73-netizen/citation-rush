@@ -1,9 +1,10 @@
 interface Props {
   onStart: () => void
   onSkipToDemo: () => void
+  onSeeLeaderboard: () => void
 }
 
-export default function WelcomeScreen({ onStart, onSkipToDemo }: Props) {
+export default function WelcomeScreen({ onStart, onSkipToDemo, onSeeLeaderboard }: Props) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-6 bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950">
       <div className="text-[11px] uppercase tracking-[0.3em] text-purple-300/80">Nexus Extend</div>
@@ -31,6 +32,14 @@ export default function WelcomeScreen({ onStart, onSkipToDemo }: Props) {
         className="mt-6 text-sm text-neutral-400 hover:text-neutral-200 underline underline-offset-4 transition-colors"
       >
         Just show me the demo →
+      </button>
+
+      <button
+        type="button"
+        onClick={onSeeLeaderboard}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 text-xs uppercase tracking-widest text-neutral-500 hover:text-neutral-300 transition-colors"
+      >
+        🏆 Leaderboard
       </button>
 
       <div className="absolute bottom-6 right-6 text-xs text-neutral-500 tracking-wider">

@@ -7,6 +7,7 @@ import TutorialScreen from './screens/TutorialScreen'
 import CountdownScreen from './screens/CountdownScreen'
 import ResultsScreen from './screens/ResultsScreen'
 import DemoPlaceholder from './screens/DemoPlaceholder'
+import LeaderboardScreen from './screens/LeaderboardScreen'
 import type { Screen, PlayerInfo, FinalResult } from './types'
 import type { GameEngine } from './game/GameEngine'
 import { storage } from './storage'
@@ -16,6 +17,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('welcome')
   const [player, setPlayer] = useState<PlayerInfo | null>(null)
   const [result, setResult] = useState<FinalResult | null>(null)
+  const [savedRunId, setSavedRunId] = useState<string | null>(null)
   const engineRef = useRef<GameEngine | null>(null)
   const runStartedAtRef = useRef<number>(0)
 
@@ -46,7 +48,7 @@ export default function App() {
       const endedAt = Date.now()
       const startedAt = runStartedAtRef.current || endedAt - GAME_DURATION_S * 1000
       const survivedSeconds = Math.max(0, Math.min(GAME_DURATION_S, Math.floor(GAME_DURATION_S - final.timeRemaining)))
-      void storage.saveRun({
+      storage.saveRun({
         name: player.name,
         institution: player.institution,
         email: player.email,
@@ -57,18 +59,24 @@ export default function App() {
         survivedSeconds,
         endedBy: final.endedBy,
         stats: final.stats,
-      })
+      }).then(saved => setSavedRunId(saved.id))
     }
   }, [player])
+
+  const handleSeeLeaderboard = useCallback(() => setScreen('leaderboard'), [])
 
   const handleSeeNexus = useCallback(() => setScreen('demo'), [])
   const handlePlayAgain = useCallback(() => {
     setResult(null)
-    // keep player info so they don't re-enter it on a back-to-back run
+    setSavedRunId(null)
+    // Keep player info so they don't re-enter it on a back-to-back run
+    // (matches SPEC §4 Screen 8 "skip intake if same session within 5 minutes" —
+    // implemented as "same browser session" here, simpler and sufficient for booth).
     setScreen('countdown')
   }, [])
   const handleResetToWelcome = useCallback(() => {
     setResult(null)
+    setSavedRunId(null)
     setPlayer(null)
     setScreen('welcome')
   }, [])
@@ -87,7 +95,11 @@ export default function App() {
       </div>
 
       {screen === 'welcome' && (
-        <WelcomeScreen onStart={handleStart} onSkipToDemo={handleSkipToDemo} />
+        <WelcomeScreen
+          onStart={handleStart}
+          onSkipToDemo={handleSkipToDemo}
+          onSeeLeaderboard={handleSeeLeaderboard}
+        />
       )}
       {screen === 'intake' && (
         <IntakeScreen
@@ -104,9 +116,19 @@ export default function App() {
           result={result}
           onSeeNexus={handleSeeNexus}
           onPlayAgain={handlePlayAgain}
+          onSeeLeaderboard={handleSeeLeaderboard}
         />
       )}
-      {screen === 'demo' && <DemoPlaceholder onBack={handleResetToWelcome} />}
+      {screen === 'demo' && (
+        <DemoPlaceholder onBack={handleResetToWelcome} onSeeLeaderboard={handleSeeLeaderboard} />
+      )}
+      {screen === 'leaderboard' && (
+        <LeaderboardScreen
+          highlightRunId={savedRunId}
+          onPlayAgain={player ? handlePlayAgain : handleResetToWelcome}
+          onDone={handleResetToWelcome}
+        />
+      )}
 
       {screen !== 'game' && screen !== 'countdown' && (
         <div className="absolute bottom-4 left-4 z-10">

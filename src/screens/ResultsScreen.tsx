@@ -6,6 +6,7 @@ interface Props {
   result: FinalResult
   onSeeNexus: () => void
   onPlayAgain: () => void
+  onSeeLeaderboard: () => void
 }
 
 const badTypeMeta = [
@@ -15,7 +16,7 @@ const badTypeMeta = [
   { key: 'hallucinated', emoji: '👻', label: 'Hallucinated citations',  blurb: "AI invented these — they don't exist." },
 ] as const
 
-export default function ResultsScreen({ player, result, onSeeNexus, onPlayAgain }: Props) {
+export default function ResultsScreen({ player, result, onSeeNexus, onPlayAgain, onSeeLeaderboard }: Props) {
   const survived = Math.floor(GAME_DURATION_S - result.timeRemaining)
   const fullRun = result.endedBy === 'time' && result.hits < 3
 
@@ -94,13 +95,22 @@ export default function ResultsScreen({ player, result, onSeeNexus, onPlayAgain 
           Watch it work →
         </button>
 
-        <button
-          type="button"
-          onClick={onPlayAgain}
-          className="mt-4 self-start text-sm text-purple-200 hover:text-white underline underline-offset-4"
-        >
-          Play again
-        </button>
+        <div className="mt-4 flex flex-col gap-2 items-start">
+          <button
+            type="button"
+            onClick={onPlayAgain}
+            className="text-sm text-purple-200 hover:text-white underline underline-offset-4"
+          >
+            Play again
+          </button>
+          <button
+            type="button"
+            onClick={onSeeLeaderboard}
+            className="text-sm text-purple-200 hover:text-white underline underline-offset-4"
+          >
+            View leaderboard
+          </button>
+        </div>
       </div>
     </div>
   )
