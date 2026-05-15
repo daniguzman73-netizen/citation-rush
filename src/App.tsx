@@ -9,6 +9,9 @@ import ResultsScreen from './screens/ResultsScreen'
 import DemoPlaceholder from './screens/DemoPlaceholder'
 import LeaderboardScreen from './screens/LeaderboardScreen'
 import AdminPanel from './components/AdminPanel'
+import { useIdleReset } from './hooks/useIdleReset'
+
+const IDLE_RESET_MS = 30_000
 import type { Screen, PlayerInfo, FinalResult } from './types'
 import type { GameEngine } from './game/GameEngine'
 import { storage } from './storage'
@@ -88,6 +91,16 @@ export default function App() {
   // The canvas needs to be mounted during countdown + game (so the engine is ready to start).
   // Keep it mounted across the whole session for simpler lifecycle, hidden when not in use.
   const canvasVisible = screen === 'game' || screen === 'countdown'
+
+  // SPEC §4 Screen 9 — return to attract mode after 30s of inactivity on a non-gameplay
+  // screen. Paused while: (a) actively playing, (b) on the welcome screen already, or
+  // (c) the admin panel is open (so booth staff aren't ejected mid-task).
+  const idleEnabled = !adminOpen && screen !== 'welcome' && screen !== 'countdown' && screen !== 'game'
+  useIdleReset({
+    enabled: idleEnabled,
+    timeoutMs: IDLE_RESET_MS,
+    onIdle: handleResetToWelcome,
+  })
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-neutral-950 relative">
