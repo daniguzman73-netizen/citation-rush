@@ -16,6 +16,9 @@ export interface PlayerInfo {
   institution: string
   email: string
   optedIn: boolean
+  // True when the visitor chose "Skip →" on the intake screen. Anonymous runs are
+  // played fully but not persisted to the leaderboard.
+  anonymous: boolean
 }
 
 export type FinalResult = GameState

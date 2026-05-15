@@ -28,7 +28,23 @@ export default function IntakeScreen({ initial, onSubmit, onBack }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit) return
-    onSubmit({ name: name.trim(), institution: institution.trim(), email: email.trim(), optedIn })
+    onSubmit({
+      name: name.trim(),
+      institution: institution.trim(),
+      email: email.trim(),
+      optedIn,
+      anonymous: false,
+    })
+  }
+
+  const handleSkip = () => {
+    onSubmit({
+      name: 'Guest',
+      institution: '',
+      email: '',
+      optedIn: false,
+      anonymous: true,
+    })
   }
 
   return (
@@ -154,14 +170,26 @@ export default function IntakeScreen({ initial, onSubmit, onBack }: Props) {
           >
             ← Back
           </button>
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className="px-6 py-3 rounded-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 disabled:bg-neutral-700 disabled:text-neutral-500 disabled:cursor-not-allowed text-base font-semibold transition-colors"
-          >
-            Let's run →
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="text-sm text-neutral-400 hover:text-neutral-200 underline underline-offset-4 transition-colors"
+            >
+              Skip →
+            </button>
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="px-6 py-3 rounded-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 disabled:bg-neutral-700 disabled:text-neutral-500 disabled:cursor-not-allowed text-base font-semibold transition-colors"
+            >
+              Let's run →
+            </button>
+          </div>
         </div>
+        <p className="mt-3 text-xs text-neutral-500 text-right">
+          Skip plays a run without saving to the leaderboard.
+        </p>
       </form>
     </div>
   )

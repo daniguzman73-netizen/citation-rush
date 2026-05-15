@@ -2,8 +2,15 @@ import * as THREE from 'three'
 import { CITATION_SPECS, type CitationType } from './constants'
 
 // Card layout — drawn at high res so it stays crisp when scaled in 3D.
+// New layout (Phase 2 feedback): icon as a small top-left accent, label as the
+// dominant centered element, citation text small at the bottom. The label
+// auto-shrinks to fit, so 9-character types like "PREDATORY" / "NOT FOUND"
+// don't overflow.
 const W = 512
 const H = 320
+
+const LABEL_MAX_WIDTH = W - 64   // 32px margin each side
+const LABEL_BASE_PX = 110
 
 interface CardMeta {
   label: string
@@ -31,13 +38,11 @@ const META: Record<CitationType, CardMeta> = {
     label: 'PREPRINT',
     citation: 'Smith, 2025 — arXiv',
     drawIcon: (ctx, x, y, s) => {
-      // clock face
       ctx.strokeStyle = '#ffffff'
       ctx.lineWidth = s * 0.13
       ctx.beginPath()
       ctx.arc(x, y, s * 0.42, 0, Math.PI * 2)
       ctx.stroke()
-      // hands
       ctx.lineCap = 'round'
       ctx.beginPath()
       ctx.moveTo(x, y); ctx.lineTo(x, y - s * 0.28)
@@ -49,14 +54,12 @@ const META: Record<CitationType, CardMeta> = {
     label: 'PAYWALL',
     citation: 'Tanaka, 2023 — Elsevier',
     drawIcon: (ctx, x, y, s) => {
-      // shackle
       ctx.strokeStyle = '#ffffff'
       ctx.lineWidth = s * 0.13
       ctx.lineCap = 'round'
       ctx.beginPath()
       ctx.arc(x, y - s * 0.05, s * 0.25, Math.PI, 0)
       ctx.stroke()
-      // body
       ctx.fillStyle = '#ffffff'
       const bw = s * 0.7, bh = s * 0.45
       ctx.beginPath()
@@ -68,7 +71,6 @@ const META: Record<CitationType, CardMeta> = {
     label: 'PREDATORY',
     citation: "Kumar, 2024 — Int'l J. Adv. Studies",
     drawIcon: (ctx, x, y, s) => {
-      // warning triangle
       ctx.fillStyle = '#ffffff'
       ctx.beginPath()
       ctx.moveTo(x, y - s * 0.42)
@@ -76,8 +78,7 @@ const META: Record<CitationType, CardMeta> = {
       ctx.lineTo(x - s * 0.46, y + s * 0.32)
       ctx.closePath()
       ctx.fill()
-      // bang
-      ctx.fillStyle = CITATION_SPECS.predatory.color === 0xdc2626 ? '#7f1d1d' : '#000'
+      ctx.fillStyle = '#7f1d1d'
       ctx.beginPath()
       ctx.rect(x - s * 0.06, y - s * 0.18, s * 0.12, s * 0.28)
       ctx.fill()
@@ -90,7 +91,6 @@ const META: Record<CitationType, CardMeta> = {
     label: 'NOT FOUND',
     citation: 'Garcia, 2031 — Journal of [glitch]',
     drawIcon: (ctx, x, y, s) => {
-      // ghost
       ctx.fillStyle = '#ffffff'
       ctx.beginPath()
       const r = s * 0.4
@@ -98,14 +98,12 @@ const META: Record<CitationType, CardMeta> = {
       ctx.lineTo(x - r, y)
       ctx.arc(x, y, r, Math.PI, 0)
       ctx.lineTo(x + r, y + s * 0.35)
-      // wavy bottom
       for (let i = 0; i < 4; i++) {
         const sx = x + r - (i * r) / 2 - r / 4
         ctx.quadraticCurveTo(sx, y + s * 0.5, sx - r / 4, y + s * 0.35)
       }
       ctx.closePath()
       ctx.fill()
-      // eyes
       ctx.fillStyle = '#7e22ce'
       ctx.beginPath(); ctx.arc(x - s * 0.13, y - s * 0.03, s * 0.06, 0, Math.PI * 2); ctx.fill()
       ctx.beginPath(); ctx.arc(x + s * 0.13, y - s * 0.03, s * 0.06, 0, Math.PI * 2); ctx.fill()
@@ -113,11 +111,6 @@ const META: Record<CitationType, CardMeta> = {
   },
 }
 
-function hex(n: number): string {
-  return '#' + n.toString(16).padStart(6, '0')
-}
-
-// Returns a tuple [shade darker, shade lighter] for a hex color.
 function shade(n: number, delta: number): string {
   const r = Math.max(0, Math.min(255, ((n >> 16) & 0xff) + delta))
   const g = Math.max(0, Math.min(255, ((n >> 8) & 0xff) + delta))
@@ -125,59 +118,70 @@ function shade(n: number, delta: number): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
 }
 
+// Pick the largest font size at which `text` fits in `maxWidth`.
+function fitFontSize(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  basePx: number,
+  minPx = 40,
+): number {
+  let size = basePx
+  ctx.font = `900 ${size}px system-ui, sans-serif`
+  while (ctx.measureText(text).width > maxWidth && size > minPx) {
+    size -= 2
+    ctx.font = `900 ${size}px system-ui, sans-serif`
+  }
+  return size
+}
+
 function drawCard(ctx: CanvasRenderingContext2D, type: CitationType) {
   const spec = CITATION_SPECS[type]
   const meta = META[type]
   const c = spec.color
 
-  // background gradient
+  // background — gradient in the type color
   const grad = ctx.createLinearGradient(0, 0, 0, H)
-  grad.addColorStop(0, shade(c, 30))
-  grad.addColorStop(1, shade(c, -40))
+  grad.addColorStop(0, shade(c, 36))
+  grad.addColorStop(1, shade(c, -50))
   ctx.fillStyle = grad
-  // rounded card body
   ctx.beginPath()
   ctx.roundRect(8, 8, W - 16, H - 16, 28)
   ctx.fill()
 
-  // inner border
-  ctx.strokeStyle = shade(c, -80)
+  // inner border for definition
+  ctx.strokeStyle = shade(c, -90)
   ctx.lineWidth = 4
   ctx.stroke()
 
-  // icon panel (left)
-  const iconCx = 100
-  const iconCy = H / 2
-  ctx.fillStyle = 'rgba(0,0,0,0.18)'
-  ctx.beginPath(); ctx.roundRect(28, 28, 144, H - 56, 20); ctx.fill()
-  meta.drawIcon(ctx, iconCx, iconCy, 100)
+  // icon — small top-left accent on a translucent dark badge
+  const iconBoxX = 32, iconBoxY = 28, iconBoxSize = 80
+  ctx.fillStyle = 'rgba(0,0,0,0.22)'
+  ctx.beginPath()
+  ctx.roundRect(iconBoxX, iconBoxY, iconBoxSize, iconBoxSize, 16)
+  ctx.fill()
+  meta.drawIcon(ctx, iconBoxX + iconBoxSize / 2, iconBoxY + iconBoxSize / 2, iconBoxSize * 0.7)
 
-  // label (right column, top)
+  // LABEL — dominant, auto-fit to card width, vertically centered-ish
+  const labelSize = fitFontSize(ctx, meta.label, LABEL_MAX_WIDTH, LABEL_BASE_PX, 56)
+  ctx.font = `900 ${labelSize}px system-ui, sans-serif`
   ctx.fillStyle = '#ffffff'
-  ctx.font = 'bold 72px system-ui, sans-serif'
-  ctx.textBaseline = 'top'
-  ctx.textAlign = 'left'
-  ctx.shadowColor = 'rgba(0,0,0,0.35)'
-  ctx.shadowBlur = 6
-  ctx.shadowOffsetY = 2
-  ctx.fillText(meta.label, 200, 56)
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'
+  ctx.shadowBlur = 12
+  ctx.shadowOffsetY = 4
+  ctx.fillText(meta.label, W / 2, H / 2 + 12)
   ctx.shadowColor = 'transparent'
   ctx.shadowBlur = 0
   ctx.shadowOffsetY = 0
 
-  // small "citation" line
-  ctx.fillStyle = 'rgba(255,255,255,0.85)'
-  ctx.font = 'italic 30px system-ui, sans-serif'
-  ctx.fillText(meta.citation, 200, 156)
-
-  // hint stripe
-  ctx.fillStyle = 'rgba(255,255,255,0.18)'
-  ctx.fillRect(200, 220, W - 240, 6)
-  ctx.fillStyle = 'rgba(255,255,255,0.10)'
-  ctx.fillRect(200, 240, (W - 240) * 0.6, 6)
-
-  // suppress unused (kept for future variation)
-  void hex
+  // citation line at the bottom, small + italic
+  ctx.font = 'italic 24px system-ui, sans-serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.82)'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillText(meta.citation, W / 2, H - 32)
 }
 
 export function createCardTextures(): Record<CitationType, THREE.Texture> {

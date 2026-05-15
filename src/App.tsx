@@ -46,7 +46,9 @@ export default function App() {
 
     // Persist the run. Fire-and-forget — backend swallows storage errors and the
     // results screen renders from `final` directly, not from storage.
-    if (player && final.endedBy) {
+    // Anonymous runs (skipped intake) are NOT saved — they'd clutter the leaderboard
+    // with nameless rows.
+    if (player && !player.anonymous && final.endedBy) {
       const endedAt = Date.now()
       const startedAt = runStartedAtRef.current || endedAt - GAME_DURATION_S * 1000
       const survivedSeconds = Math.max(0, Math.min(GAME_DURATION_S, Math.floor(GAME_DURATION_S - final.timeRemaining)))
