@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react'
-import { INSTITUTIONS } from '../data/institutions'
+import { searchInstitutions, OTHER_OPTION_LABEL } from '../data/institutions'
 import type { PlayerInfo } from '../types'
 
 interface Props {
@@ -16,11 +16,7 @@ export default function IntakeScreen({ initial, onSubmit, onBack }: Props) {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  const suggestions = useMemo(() => {
-    if (!institution.trim()) return INSTITUTIONS.slice(0, 8)
-    const q = institution.toLowerCase()
-    return INSTITUTIONS.filter(i => i.toLowerCase().includes(q)).slice(0, 8)
-  }, [institution])
+  const suggestions = useMemo(() => searchInstitutions(institution, 8), [institution])
 
   const canSubmit = name.trim().length > 0 && institution.trim().length > 0
 
@@ -66,19 +62,32 @@ export default function IntakeScreen({ initial, onSubmit, onBack }: Props) {
             placeholder="Start typing your institution…"
             className="mt-1 w-full rounded-lg bg-neutral-800 border border-white/10 px-3 py-2 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
-          {showSuggestions && suggestions.length > 0 && (
-            <ul className="absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg bg-neutral-800 border border-white/10 shadow-xl z-10">
+          {showSuggestions && (
+            <ul className="absolute left-0 right-0 mt-1 max-h-64 overflow-y-auto rounded-lg bg-neutral-800 border border-white/10 shadow-xl z-10">
               {suggestions.map(s => (
-                <li key={s}>
+                <li key={s.unitid}>
                   <button
                     type="button"
-                    onMouseDown={() => { setInstitution(s); setShowSuggestions(false) }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-purple-600/30 transition-colors"
+                    onMouseDown={() => { setInstitution(s.name); setShowSuggestions(false) }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-purple-600/30 transition-colors flex items-baseline justify-between gap-3"
                   >
-                    {s}
+                    <span className="truncate">{s.name}</span>
+                    <span className="text-xs text-neutral-500 shrink-0">{s.state}</span>
                   </button>
                 </li>
               ))}
+              {suggestions.length === 0 && (
+                <li className="px-3 py-2 text-xs text-neutral-500 italic">No matches</li>
+              )}
+              <li className="border-t border-white/5">
+                <button
+                  type="button"
+                  onMouseDown={() => setShowSuggestions(false)}
+                  className="w-full text-left px-3 py-2 text-sm text-neutral-300 italic hover:bg-purple-600/30 transition-colors"
+                >
+                  {OTHER_OPTION_LABEL}
+                </button>
+              </li>
             </ul>
           )}
         </label>
