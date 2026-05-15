@@ -8,6 +8,7 @@ import CountdownScreen from './screens/CountdownScreen'
 import ResultsScreen from './screens/ResultsScreen'
 import DemoPlaceholder from './screens/DemoPlaceholder'
 import LeaderboardScreen from './screens/LeaderboardScreen'
+import AdminPanel from './components/AdminPanel'
 import type { Screen, PlayerInfo, FinalResult } from './types'
 import type { GameEngine } from './game/GameEngine'
 import { storage } from './storage'
@@ -18,6 +19,7 @@ export default function App() {
   const [player, setPlayer] = useState<PlayerInfo | null>(null)
   const [result, setResult] = useState<FinalResult | null>(null)
   const [savedRunId, setSavedRunId] = useState<string | null>(null)
+  const [adminOpen, setAdminOpen] = useState(false)
   const engineRef = useRef<GameEngine | null>(null)
   const runStartedAtRef = useRef<number>(0)
 
@@ -99,6 +101,7 @@ export default function App() {
           onStart={handleStart}
           onSkipToDemo={handleSkipToDemo}
           onSeeLeaderboard={handleSeeLeaderboard}
+          onAdminOpen={() => setAdminOpen(true)}
         />
       )}
       {screen === 'intake' && (
@@ -135,6 +138,8 @@ export default function App() {
           <MuteToggle />
         </div>
       )}
+
+      {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
     </div>
   )
 }

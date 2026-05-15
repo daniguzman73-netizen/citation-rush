@@ -1,10 +1,24 @@
+import { useRef } from 'react'
+
 interface Props {
   onStart: () => void
   onSkipToDemo: () => void
   onSeeLeaderboard: () => void
+  onAdminOpen: () => void
 }
 
-export default function WelcomeScreen({ onStart, onSkipToDemo, onSeeLeaderboard }: Props) {
+export default function WelcomeScreen({ onStart, onSkipToDemo, onSeeLeaderboard, onAdminOpen }: Props) {
+  // 5 taps on the logo within 3s opens the admin panel (kiosk back-door per handoff §3).
+  const tapsRef = useRef<number[]>([])
+  const handleLogoTap = () => {
+    const now = Date.now()
+    tapsRef.current = tapsRef.current.filter(t => now - t < 3000)
+    tapsRef.current.push(now)
+    if (tapsRef.current.length >= 5) {
+      tapsRef.current = []
+      onAdminOpen()
+    }
+  }
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-6 bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950">
       <div className="text-[11px] uppercase tracking-[0.3em] text-purple-300/80">Nexus Extend</div>
@@ -42,9 +56,14 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onSeeLeaderboard 
         🏆 Leaderboard
       </button>
 
-      <div className="absolute bottom-6 right-6 text-xs text-neutral-500 tracking-wider">
+      <button
+        type="button"
+        onClick={handleLogoTap}
+        aria-label="Logo"
+        className="absolute bottom-6 right-6 text-xs text-neutral-500 tracking-wider hover:text-neutral-400 transition-colors cursor-default"
+      >
         Clarivate · Nexus Extend
-      </div>
+      </button>
     </div>
   )
 }

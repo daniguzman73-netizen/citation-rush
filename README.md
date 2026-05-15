@@ -36,6 +36,12 @@ npm run preview    # serve the production build locally
 - **Vercel** auto-deploys from `main` for shareable previews. Default Vite preset — no extra config needed.
 - **Booth kiosk** runs the production build in Chrome `--kiosk` mode (or Electron wrapper) against the local SQLite database. Offline-first; no network required at runtime.
 
+## Admin panel
+
+Hidden admin panel: **5 taps within 3 seconds on the "Clarivate · Nexus Extend" lockup in the bottom-right of the Welcome screen** opens a password prompt. From there: leaderboard, aggregate stats (total / today / avg score / completion rate), audio toggle, CSV exports (all runs + email opt-ins), and leaderboard reset.
+
+Set the password via the `VITE_ADMIN_PASSWORD` env var at build time (e.g. in the Vercel project settings, or in `.env.local` for kiosk builds). Default if unset: `admin`. **Change this before booth deploy.**
+
 ## Build phases
 
 Following the phasing in [`SPEC.md`](./SPEC.md) section 10:
