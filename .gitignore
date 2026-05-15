@@ -21,8 +21,8 @@ dist-ssr
 *.local
 *.tsbuildinfo
 
-# Local data (kiosk SQLite)
-data/
+# Local data (kiosk SQLite) — anchored to repo root so it doesn't shadow src/data
+/data/
 *.db
 *.db-journal
 
