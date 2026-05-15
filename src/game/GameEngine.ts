@@ -25,6 +25,7 @@ import {
   GROUND_Y,
   type CitationType,
 } from './constants'
+import { createCardTextures, CARD_ASPECT } from './cardTexture'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public state shape
@@ -81,7 +82,7 @@ const initialState = (): GameState => ({
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface PoolEntry {
-  mesh: THREE.Mesh
+  sprite: THREE.Sprite
   type: CitationType
   lane: number
   airborne: boolean
@@ -107,7 +108,8 @@ export class GameEngine {
   private jumpT = -1 // -1 = not jumping; else seconds since jump start
 
   private pool: PoolEntry[] = []
-  private materials!: Record<CitationType, THREE.MeshStandardMaterial>
+  private spriteMaterials!: Record<CitationType, THREE.SpriteMaterial>
+  private cardTextures!: Record<CitationType, THREE.Texture>
   private trackGroup!: THREE.Group
 
   private state: GameState = initialState()
@@ -181,11 +183,9 @@ export class GameEngine {
     window.removeEventListener('keydown', this.boundKeyDown)
     this.resizeObserver?.disconnect()
     // Three.js cleanup
-    this.pool.forEach(p => {
-      p.mesh.geometry.dispose()
-    })
-    for (const t of Object.keys(this.materials) as CitationType[]) {
-      this.materials[t].dispose()
+    for (const t of Object.keys(this.spriteMaterials) as CitationType[]) {
+      this.spriteMaterials[t].dispose()
+      this.cardTextures[t].dispose()
     }
     this.renderer.dispose()
   }
@@ -254,19 +254,24 @@ export class GameEngine {
   }
 
   private buildPool() {
-    const geo = new THREE.BoxGeometry(OBJECT_SIZE.w, OBJECT_SIZE.h, OBJECT_SIZE.d)
-    this.materials = {
-      trusted:      new THREE.MeshStandardMaterial({ color: CITATION_SPECS.trusted.color,      emissive: CITATION_SPECS.trusted.color,      emissiveIntensity: 0.25, roughness: 0.5 }),
-      preprint:     new THREE.MeshStandardMaterial({ color: CITATION_SPECS.preprint.color,     emissive: CITATION_SPECS.preprint.color,     emissiveIntensity: 0.10, roughness: 0.6 }),
-      paywalled:    new THREE.MeshStandardMaterial({ color: CITATION_SPECS.paywalled.color,    emissive: CITATION_SPECS.paywalled.color,    emissiveIntensity: 0.10, roughness: 0.6 }),
-      predatory:    new THREE.MeshStandardMaterial({ color: CITATION_SPECS.predatory.color,    emissive: CITATION_SPECS.predatory.color,    emissiveIntensity: 0.15, roughness: 0.6 }),
-      hallucinated: new THREE.MeshStandardMaterial({ color: CITATION_SPECS.hallucinated.color, emissive: CITATION_SPECS.hallucinated.color, emissiveIntensity: 0.20, roughness: 0.6 }),
+    this.cardTextures = createCardTextures() as Record<CitationType, THREE.Texture>
+    this.spriteMaterials = {} as Record<CitationType, THREE.SpriteMaterial>
+    for (const t of Object.keys(CITATION_SPECS) as CitationType[]) {
+      this.spriteMaterials[t] = new THREE.SpriteMaterial({
+        map: this.cardTextures[t],
+        transparent: true,
+        depthWrite: false,
+      })
     }
+    // visual scale (world units) — keep aspect; height ≈ OBJECT_SIZE.h * 1.4 so cards read big
+    const scaleH = OBJECT_SIZE.h * 1.6
+    const scaleW = scaleH * CARD_ASPECT
     for (let i = 0; i < OBJECT_POOL_SIZE; i++) {
-      const mesh = new THREE.Mesh(geo, this.materials.trusted)
-      mesh.visible = false
-      this.scene.add(mesh)
-      this.pool.push({ mesh, type: 'trusted', lane: 0, airborne: false, active: false })
+      const sprite = new THREE.Sprite(this.spriteMaterials.trusted)
+      sprite.scale.set(scaleW, scaleH, 1)
+      sprite.visible = false
+      this.scene.add(sprite)
+      this.pool.push({ sprite, type: 'trusted', lane: 0, airborne: false, active: false })
     }
   }
 
@@ -338,9 +343,9 @@ export class GameEngine {
     slot.type = type
     slot.lane = lane
     slot.airborne = airborne
-    slot.mesh.material = this.materials[type]
-    slot.mesh.visible = true
-    slot.mesh.position.set(LANE_X[lane], airborne ? AIRBORNE_Y : GROUND_Y, SPAWN_Z)
+    slot.sprite.material = this.spriteMaterials[type]
+    slot.sprite.visible = true
+    slot.sprite.position.set(LANE_X[lane], airborne ? AIRBORNE_Y : GROUND_Y, SPAWN_Z)
     return slot
   }
 
@@ -391,8 +396,8 @@ export class GameEngine {
     const speed = this.currentTrackSpeed()
     for (const p of this.pool) {
       if (!p.active) continue
-      p.mesh.position.z += speed * dt
-      if (p.mesh.position.z > DESPAWN_Z) {
+      p.sprite.position.z += speed * dt
+      if (p.sprite.position.z > DESPAWN_Z) {
         // passed the player without collision
         if (p.type !== 'trusted') {
           const key = `${p.type}_dodged` as keyof RunStats
@@ -416,9 +421,9 @@ export class GameEngine {
 
     for (const p of this.pool) {
       if (!p.active) continue
-      const ox = p.mesh.position.x
-      const oy = p.mesh.position.y
-      const oz = p.mesh.position.z
+      const ox = p.sprite.position.x
+      const oy = p.sprite.position.y
+      const oz = p.sprite.position.z
 
       // AABB
       const overlapX = Math.abs(px - ox) < pHalfW + oHalfW
@@ -447,7 +452,7 @@ export class GameEngine {
 
   private deactivate(p: PoolEntry) {
     p.active = false
-    p.mesh.visible = false
+    p.sprite.visible = false
   }
 
   private deactivateAll() {
