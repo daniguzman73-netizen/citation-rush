@@ -15,9 +15,9 @@ export default function MuteToggle({ className = '' }: Props) {
       aria-pressed={muted}
       onClick={() => Audio.toggle()}
       className={
-        'rounded-full bg-black/40 hover:bg-black/60 backdrop-blur ' +
-        'text-white text-lg w-10 h-10 flex items-center justify-center ' +
-        'border border-white/15 transition-colors ' +
+        'rounded-full bg-white/80 hover:bg-white backdrop-blur ' +
+        'text-gray-700 text-lg w-10 h-10 flex items-center justify-center ' +
+        'border border-gray-200 shadow-sm transition-colors ' +
         className
       }
     >
