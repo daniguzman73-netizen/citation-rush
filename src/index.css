@@ -40,3 +40,17 @@ html, body, #root {
   padding: 0;
   overflow: hidden;
 }
+
+/* Kiosk hardening — visitors shouldn't be able to select chrome text, drag
+   images, or trigger the browser tap highlight. Inputs override this so the
+   intake form still behaves like a form. */
+* {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+input, textarea {
+  user-select: text;
+}
+

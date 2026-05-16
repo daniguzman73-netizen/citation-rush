@@ -58,6 +58,7 @@ export interface PopupEvent {
 
 export interface GameState {
   phase: GamePhase
+  paused: boolean
   timeRemaining: number  // seconds, clamped to [0, GAME_DURATION_S]
   score: number
   hits: number
@@ -81,6 +82,7 @@ const emptyStats = (): RunStats => ({
 
 const initialState = (): GameState => ({
   phase: 'idle',
+  paused: false,
   timeRemaining: GAME_DURATION_S,
   score: 0,
   hits: 0,
@@ -154,6 +156,7 @@ export class GameEngine {
   private spawnAccumulator = 0
   private lastFrameTime = 0
   private rafId: number | null = null
+  private paused = false
   private resizeObserver: ResizeObserver | null = null
   private boundKeyDown: (e: KeyboardEvent) => void
 
@@ -201,6 +204,12 @@ export class GameEngine {
   }
 
   start(): void {
+    // Cancel any in-flight RAF before starting a fresh loop. Otherwise a rapid
+    // "Play again → Play again" double-tap would race two loops and double-tick.
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId)
+      this.rafId = null
+    }
     this.state = initialState()
     this.state.phase = 'running'
     this.playerTargetLane = PLAYER_LANE_START
@@ -209,6 +218,7 @@ export class GameEngine {
     this.jumpT = -1
     this.spawnAccumulator = 0
     this.shakeT = 0
+    this.paused = false
     this.camera.position.copy(this.cameraBasePos)
     this.deactivateAll()
     for (const p of this.particles) { p.active = false; p.sprite.visible = false }
@@ -217,6 +227,24 @@ export class GameEngine {
     this.lastFrameTime = performance.now()
     this.tickLoop()
   }
+
+  // Pause / resume for tab-visibility. While paused, the render loop still runs
+  // (so the scene stays painted), but timer / spawning / movement / collisions
+  // do not advance. Resume reseeds lastFrameTime so dt doesn't jump.
+  pause(): void {
+    if (this.state.phase !== 'running' || this.paused) return
+    this.paused = true
+    this.emit()
+  }
+
+  resume(): void {
+    if (!this.paused) return
+    this.paused = false
+    this.lastFrameTime = performance.now()
+    this.emit()
+  }
+
+  isPaused(): boolean { return this.paused }
 
   dispose(): void {
     if (this.rafId !== null) cancelAnimationFrame(this.rafId)
@@ -657,7 +685,7 @@ export class GameEngine {
     const dt = Math.min(0.05, (now - this.lastFrameTime) / 1000) // clamp huge gaps (tab switch)
     this.lastFrameTime = now
 
-    if (this.state.phase === 'running') {
+    if (this.state.phase === 'running' && !this.paused) {
       this.state.timeRemaining = Math.max(0, this.state.timeRemaining - dt)
       this.maybeSpawn(dt)
       this.updatePlayer(dt)
@@ -668,10 +696,13 @@ export class GameEngine {
       }
     }
 
-    // these continue ticking during freeze-frame on game over so particles/shake finish
-    this.updateParticles(dt)
-    this.updateShakeAndFlash(dt)
-    this.updatePopups(dt)
+    // Particle/shake/popup updates: continue during the game-over freeze-frame so the
+    // collision burst finishes, but freeze entirely while paused (mid-game tab away).
+    if (!this.paused) {
+      this.updateParticles(dt)
+      this.updateShakeAndFlash(dt)
+      this.updatePopups(dt)
+    }
     if (this.state.phase !== 'idle') this.emit()
 
     this.renderer.render(this.scene, this.camera)
@@ -690,6 +721,7 @@ export class GameEngine {
     // shallow copy so React subscribers see a new reference
     const snapshot: GameState = {
       phase: this.state.phase,
+      paused: this.paused,
       timeRemaining: this.state.timeRemaining,
       score: this.state.score,
       hits: this.state.hits,

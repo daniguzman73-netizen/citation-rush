@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import GameCanvas from './components/GameCanvas'
 import MuteToggle from './components/MuteToggle'
+import PauseOverlay from './components/PauseOverlay'
 import WelcomeScreen from './screens/WelcomeScreen'
 import IntakeScreen from './screens/IntakeScreen'
 import TutorialScreen from './screens/TutorialScreen'
@@ -10,6 +11,7 @@ import NexusRevealScreen, { DEFAULT_SCENARIO } from './screens/NexusRevealScreen
 import LeaderboardScreen from './screens/LeaderboardScreen'
 import AdminPanel from './components/AdminPanel'
 import { useIdleReset } from './hooks/useIdleReset'
+import { usePageVisibility } from './hooks/usePageVisibility'
 
 const IDLE_RESET_MS = 30_000
 import type { Screen, PlayerInfo, FinalResult } from './types'
@@ -23,8 +25,10 @@ export default function App() {
   const [result, setResult] = useState<FinalResult | null>(null)
   const [savedRunId, setSavedRunId] = useState<string | null>(null)
   const [adminOpen, setAdminOpen] = useState(false)
+  const [paused, setPaused] = useState(false)
   const engineRef = useRef<GameEngine | null>(null)
   const runStartedAtRef = useRef<number>(0)
+  const pageHidden = usePageVisibility()
 
   const handleStart = useCallback(() => setScreen('intake'), [])
   const handleSkipToDemo = useCallback(() => setScreen('demo'), [])
@@ -102,6 +106,25 @@ export default function App() {
     onIdle: handleResetToWelcome,
   })
 
+  // Pause the running game whenever the tab is hidden, resume when it returns.
+  // The engine's timer / spawning / movement freeze; visitor returns to the same scene.
+  useEffect(() => {
+    const engine = engineRef.current
+    if (!engine || screen !== 'game') return
+    if (pageHidden) {
+      engine.pause()
+      setPaused(true)
+    } else {
+      engine.resume()
+      setPaused(false)
+    }
+  }, [pageHidden, screen])
+
+  const handleResume = useCallback(() => {
+    engineRef.current?.resume()
+    setPaused(false)
+  }, [])
+
   return (
     <div className="w-screen h-screen overflow-hidden bg-neutral-950 relative">
       <div className={canvasVisible ? 'absolute inset-0' : 'absolute inset-0 invisible'}>
@@ -157,6 +180,8 @@ export default function App() {
           <MuteToggle />
         </div>
       )}
+
+      {screen === 'game' && paused && <PauseOverlay onResume={handleResume} />}
 
       {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
     </div>
