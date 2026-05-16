@@ -219,10 +219,8 @@ Match Citation Challenge:
 - **Frontend:** React + Vite + TypeScript
 - **Styling:** Tailwind CSS
 - **Game engine:** **Three.js** for the 3D lane perspective + collision detection. Alternative: pure CSS/Canvas if Three.js feels heavy — but the 3D depth effect is core to the Subway Surfers feel, so Three.js is recommended.
-- **Storage:** Dual-mode behind a single `src/storage.ts` module:
-  - When `process.env.VERCEL` is set (Vercel deployments): `localStorage`. Resets per browser. Fine for preview/staging.
-  - Otherwise (local kiosk build): `better-sqlite3` at `./data/citation-rush.db`.
-- **Deployment:** Chrome `--kiosk` mode pointing at localhost, or Electron wrapper, for the actual booth kiosk. Vercel for shareable previews.
+- **Storage:** Behind a single `src/storage.ts` interface. The shipped backend is `localStorage` (key: `citation-rush:runs`) on both Vercel and the kiosk. On the booth this runs inside an isolated Chrome `--user-data-dir` profile at `%LOCALAPPDATA%\citation-rush-kiosk-profile`, so the leaderboard survives reboots as long as that profile folder is left alone. Booth staff must not clear Chrome browsing data during the show. A `better-sqlite3` backend at `./data/citation-rush.db` was specified in earlier drafts but deferred: `better-sqlite3` is a Node-native module and needs an Electron host (or co-located Node server) to run, which we chose not to add before ALA 2026. The `StorageBackend` interface in `src/storage/types.ts` is shaped to make that swap a one-file change later.
+- **Deployment:** Chrome `--kiosk` mode pointing at `http://127.0.0.1:4173` (the built `dist/` served by `npm run preview`) for the booth kiosk. Vercel for shareable previews. Launch scripts and the day-of test checklist live in `kiosk/`.
 - **No network required at kiosk runtime**
 
 ### Performance targets
