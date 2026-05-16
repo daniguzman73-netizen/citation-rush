@@ -56,6 +56,8 @@ export interface RunStats {
   predatory_hit: number
   hallucinated_dodged: number
   hallucinated_hit: number
+  retracted_dodged: number
+  retracted_hit: number
 }
 
 export type GamePhase = 'idle' | 'running' | 'over'
@@ -89,6 +91,8 @@ const emptyStats = (): RunStats => ({
   predatory_hit: 0,
   hallucinated_dodged: 0,
   hallucinated_hit: 0,
+  retracted_dodged: 0,
+  retracted_hit: 0,
 })
 
 const initialState = (): GameState => ({

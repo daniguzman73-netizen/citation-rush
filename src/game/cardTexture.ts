@@ -111,6 +111,23 @@ function iconWarning(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: n
   ctx.fill()
 }
 
+function iconRetracted(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number) {
+  // Circle-with-slash — universal "voided / no-entry" sign.
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = s * 0.13
+  ctx.lineCap = 'round'
+  // ring
+  ctx.beginPath()
+  ctx.arc(cx, cy, s * 0.40, 0, Math.PI * 2)
+  ctx.stroke()
+  // slash (top-left to bottom-right diagonal)
+  const slash = s * 0.28
+  ctx.beginPath()
+  ctx.moveTo(cx - slash, cy - slash)
+  ctx.lineTo(cx + slash, cy + slash)
+  ctx.stroke()
+}
+
 function iconGhost(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number) {
   ctx.fillStyle = '#ffffff'
   const r = s * 0.42
@@ -139,6 +156,7 @@ const META: Record<CitationType, CardMeta> = {
   paywalled:    { label: 'PAYWALL',   citation: 'Tanaka, 2023',              authorline: 'Elsevier · access restricted',    drawIcon: iconLock },
   predatory:    { label: 'PREDATORY', citation: 'Kumar, 2024',               authorline: "Int'l J. Adv. Studies",           drawIcon: iconWarning },
   hallucinated: { label: 'NOT FOUND', citation: 'Garcia, 2031',              authorline: 'Journal of [glitch]',             drawIcon: iconGhost },
+  retracted:    { label: 'RETRACTED', citation: 'Anderson, 2019',            authorline: 'Withdrawn · J. Cell Biology',     drawIcon: iconRetracted },
 }
 
 // ─── Color math ─────────────────────────────────────────────────────────────
@@ -227,6 +245,26 @@ function overlayHallucinatedScanlines(ctx: CanvasRenderingContext2D) {
   ctx.fillRect(0, 0, W, H)
 }
 
+function overlayRetractedStrike(ctx: CanvasRenderingContext2D) {
+  // Faint red wash across the whole card — gives the slate-gray base a
+  // "voided" tint without burying the white label.
+  ctx.save()
+  ctx.fillStyle = 'rgba(180, 30, 40, 0.10)'
+  ctx.fillRect(0, 0, W, H)
+
+  // Diagonal red strike from top-left to bottom-right. Drawn before the
+  // label so the label sits on top and stays readable; the strike still
+  // reads as a "this paper has been crossed out" mark across the card.
+  ctx.strokeStyle = 'rgba(180, 30, 40, 0.55)'
+  ctx.lineWidth = 6
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(48, 56)
+  ctx.lineTo(W - 48, H - 56)
+  ctx.stroke()
+  ctx.restore()
+}
+
 function overlayTrustedSheen(ctx: CanvasRenderingContext2D) {
   // Diagonal gold sheen band — pre-baked "desirability".
   const g = ctx.createLinearGradient(0, 0, W, H)
@@ -303,6 +341,7 @@ function drawCard(ctx: CanvasRenderingContext2D, type: CitationType) {
     case 'paywalled':    overlayPaywallShimmer(ctx, c);       break
     case 'predatory':    overlayPredatoryStripes(ctx);        break
     case 'hallucinated': overlayHallucinatedScanlines(ctx);   break
+    case 'retracted':    overlayRetractedStrike(ctx);         break
   }
   ctx.restore()
 

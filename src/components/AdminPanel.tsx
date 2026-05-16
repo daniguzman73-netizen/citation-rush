@@ -18,6 +18,7 @@ const RUN_COLUMNS = [
   'paywalled_dodged', 'paywalled_hit',
   'predatory_dodged', 'predatory_hit',
   'hallucinated_dodged', 'hallucinated_hit',
+  'retracted_dodged', 'retracted_hit',
 ] as const
 
 function quoteCsv(v: unknown): string {
@@ -40,6 +41,7 @@ function runToRow(r: Run): string[] {
     String(r.stats.paywalled_dodged), String(r.stats.paywalled_hit),
     String(r.stats.predatory_dodged), String(r.stats.predatory_hit),
     String(r.stats.hallucinated_dodged), String(r.stats.hallucinated_hit),
+    String(r.stats.retracted_dodged), String(r.stats.retracted_hit),
   ]
 }
 

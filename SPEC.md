@@ -139,7 +139,7 @@ After 30 seconds of inactivity at any non-gameplay screen, return to Screen 1.
 
 ---
 
-## 5. The five object types
+## 5. The six object types
 
 ### Visual design principles
 - Each object is a **citation card** (~120×80px on screen) styled as a small academic citation pill
@@ -157,15 +157,17 @@ After 30 seconds of inactivity at any non-gameplay screen, return to Screen 1.
 | 🔒 **Paywalled** | Orange | Lock | "PAYWALL" | — | +15 | −50 | "Tanaka, 2023 — *Elsevier*" |
 | 💀 **Predatory** | Dark red | Warning triangle | "PREDATORY" | — | +25 | −100 | "Kumar, 2024 — *Int'l J. Adv. Studies*" |
 | 👻 **Hallucinated** | Purple/glitchy | Ghost / pixelated | "NOT FOUND" | — | +25 | −100 | "Garcia, 2031 — *Journal of [glitch]*" |
+| 🚫 **Retracted** | Dark slate + red strike | Circle-with-slash | "RETRACTED" | — | +20 | −75 | "Anderson, 2019 — *withdrawn, J. Cell Biology*" |
 
 **Why the differentiated scoring matters:** A librarian watching someone play sees "+25 predatory dodge vs +10 preprint dodge" and intuits the risk hierarchy without anyone explaining it. That's the educational payload of differentiated scoring — it works through the audience around the player, not just the player.
 
 ### Spawn ratio
-Roughly: 50% trusted (collect), 50% bad (dodge). Within the bad pool:
+Roughly: 50% trusted (collect), 50% bad (dodge). Within the bad pool (weights, normalized at runtime):
 - 30% preprint
 - 30% paywalled
 - 20% predatory
 - 20% hallucinated
+- 15% retracted (rarest — added in a post-launch polish pass)
 
 Tune this in playtesting.
 
@@ -180,10 +182,12 @@ Final score =
   + (paywalled_dodged × 15)
   + (predatory_dodged × 25)
   + (hallucinated_dodged × 25)
+  + (retracted_dodged × 20)
   − (preprint_hits × 50)
   − (paywalled_hits × 50)
   − (predatory_hits × 100)
   − (hallucinated_hits × 100)
+  − (retracted_hits × 75)
   + (full_60s_bonus × 200)
 ```
 

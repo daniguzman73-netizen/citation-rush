@@ -40,12 +40,14 @@ export type CitationType =
   | 'paywalled'
   | 'predatory'
   | 'hallucinated'
+  | 'retracted'
 
 export const ALL_BAD_TYPES: readonly CitationType[] = [
   'preprint',
   'paywalled',
   'predatory',
   'hallucinated',
+  'retracted',
 ]
 
 export interface CitationSpec {
@@ -65,6 +67,11 @@ export const CITATION_SPECS: Record<CitationType, CitationSpec> = {
   paywalled:    { color: 0xf97316, scoreCollect: 0,   scoreDodge: 15, scoreHit: -50,  badPoolWeight: 0.30, airborneEligible: true  },
   predatory:    { color: 0xdc2626, scoreCollect: 0,   scoreDodge: 25, scoreHit: -100, badPoolWeight: 0.20, airborneEligible: false },
   hallucinated: { color: 0xa855f7, scoreCollect: 0,   scoreDodge: 25, scoreHit: -100, badPoolWeight: 0.20, airborneEligible: true  },
+  // Retracted: previously peer-reviewed but formally withdrawn. Worse than a preprint
+  // (which is just unreviewed) but slightly less dangerous than a predatory journal
+  // (which was never legitimate to begin with). Ground-only — represented as a
+  // crossed-out paper, not a thing that floats.
+  retracted:    { color: 0x57534e, scoreCollect: 0,   scoreDodge: 20, scoreHit: -75,  badPoolWeight: 0.15, airborneEligible: false },
 }
 
 // Spawn pacing (spec §4 Screen 5 "Spawn pacing")

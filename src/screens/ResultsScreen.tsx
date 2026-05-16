@@ -14,6 +14,7 @@ const badTypeMeta = [
   { key: 'preprint',     emoji: '⚠️', label: 'Unreviewed preprints',    blurb: 'Early drafts shared before peer review — worth verifying.' },
   { key: 'paywalled',    emoji: '🔒', label: 'Paywalled sources',       blurb: "Behind a paywall and not in your library's collection." },
   { key: 'hallucinated', emoji: '👻', label: 'Hallucinated citations',  blurb: "AI invented these — they don't exist." },
+  { key: 'retracted',    emoji: '🚫', label: 'Retracted papers',        blurb: 'Previously published but formally withdrawn — should no longer be cited.' },
 ] as const
 
 export default function ResultsScreen({ player, result, onSeeNexus, onPlayAgain, onSeeLeaderboard }: Props) {
@@ -24,12 +25,14 @@ export default function ResultsScreen({ player, result, onSeeNexus, onPlayAgain,
     result.stats.preprint_dodged +
     result.stats.paywalled_dodged +
     result.stats.predatory_dodged +
-    result.stats.hallucinated_dodged
+    result.stats.hallucinated_dodged +
+    result.stats.retracted_dodged
   const totalHit =
     result.stats.preprint_hit +
     result.stats.paywalled_hit +
     result.stats.predatory_hit +
-    result.stats.hallucinated_hit
+    result.stats.hallucinated_hit +
+    result.stats.retracted_hit
 
   return (
     <div className="absolute inset-0 flex items-stretch text-white bg-neutral-950">
@@ -85,7 +88,7 @@ export default function ResultsScreen({ player, result, onSeeNexus, onPlayAgain,
           Now see how Nexus catches them all
         </h3>
         <p className="mt-4 text-purple-100/90 text-base md:text-lg">
-          Nexus dodges every one of these — automatically, in seconds, every time.
+          Nexus dodges every one of these - in seconds, every time.
         </p>
         <button
           type="button"
