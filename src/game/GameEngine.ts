@@ -27,7 +27,12 @@ import {
   type CitationType,
 } from './constants'
 import { createCardTextures, CARD_ASPECT } from './cardTexture'
+import { createPaperFloorTexture, PAPER_REPEAT_V } from './paperTexture'
 import { Audio } from '../audio/Audio'
+
+// Scene environment — warm cream paper world, matching the Nexus Booth aesthetic.
+const SCENE_BG_COLOR = 0xF5EFE0   // warm cream
+const SCENE_FOG_COLOR = 0xEBE4D2  // slightly darker cream — distant pages fade into haze
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public state shape
@@ -175,10 +180,11 @@ export class GameEngine {
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    this.renderer.setClearColor(0x0b0b14, 1)
+    this.renderer.setClearColor(SCENE_BG_COLOR, 1)
 
     this.scene = new THREE.Scene()
-    this.scene.fog = new THREE.Fog(0x0b0b14, 25, TRACK_LENGTH * 0.9)
+    this.scene.background = new THREE.Color(SCENE_BG_COLOR)
+    this.scene.fog = new THREE.Fog(SCENE_FOG_COLOR, 25, TRACK_LENGTH * 0.9)
 
     this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200)
     this.camera.position.set(0, 4.5, 7)
@@ -296,25 +302,23 @@ export class GameEngine {
   private buildTrack() {
     this.trackGroup = new THREE.Group()
 
-    // Floor — a long plane under the lanes
+    // Floor — one big manuscript page running into the distance. The texture
+    // bakes in: cream paper grain, faint ruled lines, blurred margin "body
+    // text", sparse red margin scribbles, and the four pencil-stroke lane
+    // dividers. Tiled along Z so it covers the full track length without
+    // stretching the paper artifacts.
     const floorWidth = LANE_X[LANE_COUNT - 1] - LANE_X[0] + 3
+    const paper = createPaperFloorTexture()
+    paper.repeat.set(1, PAPER_REPEAT_V)
+
     const floorGeo = new THREE.PlaneGeometry(floorWidth, TRACK_LENGTH)
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1d1d2b, roughness: 0.9 })
+    // MeshBasicMaterial — texture already has all the value baked in, we don't
+    // want directional lighting to darken the cream paper.
+    const floorMat = new THREE.MeshBasicMaterial({ map: paper })
     const floor = new THREE.Mesh(floorGeo, floorMat)
     floor.rotation.x = -Math.PI / 2
     floor.position.z = SPAWN_Z / 2 + DESPAWN_Z / 2
     this.trackGroup.add(floor)
-
-    // Lane dividers
-    const lineMat = new THREE.MeshBasicMaterial({ color: 0x4a4a6a })
-    for (let i = 0; i <= LANE_COUNT; i++) {
-      const x = LANE_X[0] - LANE_WIDTH_HALF() + i * LANE_WIDTH_FULL()
-      const lineGeo = new THREE.PlaneGeometry(0.05, TRACK_LENGTH)
-      const line = new THREE.Mesh(lineGeo, lineMat)
-      line.rotation.x = -Math.PI / 2
-      line.position.set(x, 0.01, SPAWN_Z / 2 + DESPAWN_Z / 2)
-      this.trackGroup.add(line)
-    }
 
     this.scene.add(this.trackGroup)
   }
@@ -824,6 +828,3 @@ export class GameEngine {
   }
 }
 
-// LANE_WIDTH math helpers (kept inline to avoid an import cycle for two numbers)
-function LANE_WIDTH_FULL() { return LANE_X[1] - LANE_X[0] }
-function LANE_WIDTH_HALF() { return LANE_WIDTH_FULL() / 2 }
