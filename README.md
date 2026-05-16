@@ -34,7 +34,7 @@ npm run preview    # serve the production build locally
 ## Deployment
 
 - **Vercel** auto-deploys from `main` for shareable previews. Default Vite preset — no extra config needed.
-- **Booth kiosk** runs the production build in Chrome `--kiosk` mode (or Electron wrapper) against the local SQLite database. Offline-first; no network required at runtime.
+- **Booth kiosk** runs the production build in Chrome `--kiosk` mode (Electron wrapper TBD). Offline-first; no network required at runtime. **Setup, launch scripts, and the day-of test checklist are in [`kiosk/README.md`](./kiosk/README.md).**
 
 ## Admin panel
 
