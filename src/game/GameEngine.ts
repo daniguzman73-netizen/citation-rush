@@ -333,10 +333,19 @@ export class GameEngine {
   // ── Scene construction ────────────────────────────────────────────────────
 
   private buildLights() {
+    // Ambient + two directionals. The owl is the only thing in the scene that
+    // responds to lighting (floor + cards + decals are all unlit Basic/Sprite
+    // materials), so this is effectively the owl's key + fill rig.
     const ambient = new THREE.AmbientLight(0xffffff, 0.55)
-    const dir = new THREE.DirectionalLight(0xffffff, 0.9)
-    dir.position.set(5, 10, 5)
-    this.scene.add(ambient, dir)
+    // Original directional — keep, lights the right side from above-back.
+    const keyDir = new THREE.DirectionalLight(0xffffff, 0.85)
+    keyDir.position.set(5, 10, 5)
+    // New soft key from upper-back-center — catches the camera-facing side of
+    // the owl (back of head, top of wings, back of body) so it has visible
+    // light/shadow separation instead of reading as a flat blob.
+    const cameraKey = new THREE.DirectionalLight(0xffffff, 0.45)
+    cameraKey.position.set(0, 8, 4)
+    this.scene.add(ambient, keyDir, cameraKey)
   }
 
   private buildTrack() {
@@ -736,6 +745,11 @@ export class GameEngine {
 
     // ── Head: subtle bob-coupled tilt; stays mostly steady ─────────────────
     owl.head.rotation.x = sinPhase * OWL_ANIM.runHeadTiltRad
+
+    // ── Tail: tiny wag in sync with bob — adds to the resting droop angle ──
+    // Tail's rest rotation.x = -0.32 (drooping down). Wag adds a small swing.
+    owl.tail.rotation.x = -0.32 + sinPhase * OWL_ANIM.runTailWagRad
+    owl.tail.rotation.y = sinPhase * OWL_ANIM.runTailWagRad * 0.6
 
     // ── Body roll: lane-switch tilt (target lerped, smooth) ────────────────
     // Roll proportional to "how far we still are from the target lane",
