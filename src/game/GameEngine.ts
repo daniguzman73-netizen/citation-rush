@@ -34,6 +34,7 @@ import {
   drawPageNumberTexture,
   PAPER_REPEAT_V,
 } from './paperTexture'
+import { createOwl, OWL_ANIM, type OwlRefs } from './playerOwl'
 import { Audio } from '../audio/Audio'
 
 // Scene environment — warm cream paper world, matching the Nexus Booth aesthetic.
@@ -191,6 +192,13 @@ export class GameEngine {
   // Brief scale-up bounce on the player on collect — seconds remaining.
   private playerBounceT = 0
 
+  // Owl visual rig — set in buildPlayer().
+  private owl!: OwlRefs
+  // Body-roll for lane switches (lerped toward target each frame).
+  private playerRoll = 0
+  // Hit-shake remaining (180ms wobble + pupil scale-up).
+  private playerShakeT = 0
+
   private state: GameState = initialState()
   private subs = new Set<Subscriber>()
   private nextPopupId = 1
@@ -263,8 +271,11 @@ export class GameEngine {
     this.shakeT = 0
     this.time = 0
     this.playerBounceT = 0
+    this.playerShakeT = 0
+    this.playerRoll = 0
     this.paused = false
     this.player.scale.set(1, 1, 1)
+    this.player.rotation.set(0, 0, 0)
     this.camera.position.copy(this.cameraBasePos)
     this.deactivateAll()
     for (const p of this.particles) { p.active = false; p.sprite.visible = false }
@@ -304,6 +315,8 @@ export class GameEngine {
     this.particleGoldMat?.dispose()
     this.particleRedMat?.dispose()
     this.particleTexture?.dispose()
+    // Owl rig — disposes shared sphere/cone/cyl/box geometries and all materials.
+    for (const d of this.owl?.disposables ?? []) d.dispose()
     this.renderer.dispose()
   }
 
@@ -412,22 +425,11 @@ export class GameEngine {
   }
 
   private buildPlayer() {
-    this.player = new THREE.Group()
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(PLAYER_SIZE.w, PLAYER_SIZE.h, PLAYER_SIZE.d),
-      new THREE.MeshStandardMaterial({ color: 0x60a5fa, roughness: 0.5 }),
-    )
-    body.position.y = 0
-    this.player.add(body)
-
-    // small "head" cube so orientation reads
-    const head = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.5, 0.5),
-      new THREE.MeshStandardMaterial({ color: 0xfde68a, roughness: 0.5 }),
-    )
-    head.position.y = PLAYER_SIZE.h / 2 + 0.3
-    this.player.add(head)
-
+    // Stylized geometric owl scholar — replaces the placeholder cube. Built
+    // entirely from primitives in playerOwl.ts. `root` is the engine-facing
+    // group (= this.player), `visual` is the bob-carrying child.
+    this.owl = createOwl()
+    this.player = this.owl.root
     this.player.position.set(this.playerX, this.playerY, PLAYER_Z)
     this.scene.add(this.player)
   }
@@ -680,6 +682,94 @@ export class GameEngine {
     }
 
     this.player.position.set(this.playerX, this.playerY, PLAYER_Z)
+
+    // Owl rig: running bob + wing flap + foot alternation + head tilt, plus
+    // jump pose, lane roll, and hit shake. All purely visual — does not
+    // affect collision (which uses playerX/playerY/PLAYER_Z directly).
+    this.updateOwlAnimation(dt)
+  }
+
+  private updateOwlAnimation(dt: number) {
+    const owl = this.owl
+    const t = this.time
+    const jumping = this.jumpT >= 0
+    const jumpProgress = jumping ? Math.min(1, this.jumpT / JUMP_DURATION) : 0
+    // sine envelope peaks at apex (progress = 0.5) → 1, eases to 0 at takeoff/landing
+    const jumpEnvelope = jumping ? Math.sin(Math.PI * jumpProgress) : 0
+
+    // Running cycle phase (radians) — drives bob, flap, foot swing, head tilt.
+    const cycleOmega = (2 * Math.PI) / OWL_ANIM.runCycleSeconds
+    const phase = t * cycleOmega
+    const sinPhase = Math.sin(phase)
+
+    // ── Running bob on the visual sub-group ────────────────────────────────
+    // Only when grounded; in the air, the body holds a forward-tilt pose.
+    owl.visual.position.y = jumping ? 0 : sinPhase * OWL_ANIM.runBobAmplitude
+
+    // ── Wings: alternating flap when running, both extend out when jumping ─
+    if (jumping) {
+      const extend = jumpEnvelope * OWL_ANIM.jumpWingExtendRad
+      owl.leftWing.rotation.z  = -extend
+      owl.rightWing.rotation.z = +extend
+    } else {
+      // Same-sign rotation on both wings = ALTERNATING flap (left up while
+      // right down, by pivot symmetry — see the owl rig file for the geometry
+      // reasoning).
+      const flap = sinPhase * OWL_ANIM.runFlapAmplitudeRad
+      owl.leftWing.rotation.z  = flap
+      owl.rightWing.rotation.z = flap
+    }
+
+    // ── Feet: forward/back alternation when running, tucked when jumping ───
+    if (jumping) {
+      const tuck = jumpEnvelope * OWL_ANIM.jumpFootTuckY
+      owl.leftFoot.position.y  = -0.62 + tuck
+      owl.rightFoot.position.y = -0.62 + tuck
+      owl.leftFoot.position.z  = 0
+      owl.rightFoot.position.z = 0
+    } else {
+      owl.leftFoot.position.y  = -0.62
+      owl.rightFoot.position.y = -0.62
+      owl.leftFoot.position.z  =  sinPhase * OWL_ANIM.runFootSwingZ
+      owl.rightFoot.position.z = -sinPhase * OWL_ANIM.runFootSwingZ
+    }
+
+    // ── Head: subtle bob-coupled tilt; stays mostly steady ─────────────────
+    owl.head.rotation.x = sinPhase * OWL_ANIM.runHeadTiltRad
+
+    // ── Body roll: lane-switch tilt (target lerped, smooth) ────────────────
+    // Roll proportional to "how far we still are from the target lane",
+    // clamped, then eased toward that target so the roll feels weighted.
+    const laneDelta = LANE_X[this.playerTargetLane] - this.playerX
+    const targetRoll = jumping
+      ? 0
+      : THREE.MathUtils.clamp(
+          laneDelta * OWL_ANIM.laneTiltScale,
+          -OWL_ANIM.laneTiltMaxRad,
+          +OWL_ANIM.laneTiltMaxRad,
+        )
+    this.playerRoll = THREE.MathUtils.lerp(this.playerRoll, targetRoll, OWL_ANIM.laneTiltLerp)
+
+    // ── Hit shake: ±10° body wobble + pupil scale-up (180ms total) ─────────
+    let shakeRoll = 0
+    let pupilMul = 1
+    if (this.playerShakeT > 0) {
+      this.playerShakeT = Math.max(0, this.playerShakeT - dt)
+      const remaining = this.playerShakeT / OWL_ANIM.hitShakeDuration
+      // High-frequency wobble that decays with the timer.
+      shakeRoll = Math.sin(this.time * 80) * OWL_ANIM.hitShakeAmpRad * remaining
+      // Pupils scale up while shaking, return to baseline as it fades.
+      pupilMul = 1 + (OWL_ANIM.hitPupilScaleMul - 1) * remaining
+    }
+    // Pupil scale (mesh.scale, applied to a unit-sphere geometry → base * mul)
+    owl.leftPupil.scale.setScalar(0.08 * pupilMul)
+    owl.rightPupil.scale.setScalar(0.08 * pupilMul)
+
+    // ── Compose final rotations on the root ────────────────────────────────
+    // X: forward tilt during jump (negative X tilts top toward -Z = forward).
+    this.player.rotation.x = -jumpEnvelope * OWL_ANIM.jumpForwardTiltRad
+    // Z: lane roll + hit shake.
+    this.player.rotation.z = this.playerRoll + shakeRoll
   }
 
   private updateCitations(dt: number) {
@@ -783,6 +873,7 @@ export class GameEngine {
         this.pushPopup('hit', value)
         this.emitParticles(collisionPoint, 'hit', 6)
         this.shakeT = SHAKE_DURATION
+        this.playerShakeT = OWL_ANIM.hitShakeDuration
         this.state.hitFlash = 1
         Audio.hit()
         if (this.state.hits >= MAX_HITS) {
