@@ -20,11 +20,14 @@ export default function HUD({ state }: Props) {
         <div className="flex gap-2 text-2xl leading-none">
           {Array.from({ length: MAX_HITS }, (_, i) => {
             const lost = i < state.hits
+            const justLost = lost && i === state.hits - 1
             return (
               <span
                 key={i}
-                className={lost ? 'text-neutral-600' : 'text-red-400'}
+                className={lost ? 'text-neutral-600 inline-block' : 'text-red-400 inline-block'}
                 aria-label={lost ? 'lost life' : 'remaining life'}
+                // Animate the most-recently-lost heart with a brief scale pulse.
+                style={justLost ? { animation: 'heartLost 0.4s ease-out' } : undefined}
               >
                 {lost ? '♡' : '♥'}
               </span>
@@ -32,6 +35,15 @@ export default function HUD({ state }: Props) {
           })}
         </div>
       </div>
+
+      {/* Heart-lost keyframe injected once; rendered at the top of the HUD only when in use. */}
+      <style>{`
+        @keyframes heartLost {
+          0%   { transform: scale(1);    color: #f87171; }
+          40%  { transform: scale(1.6);  color: #ef4444; }
+          100% { transform: scale(1);    color: #525252; }
+        }
+      `}</style>
 
       {/* Top-right: score + popups */}
       <div className="absolute top-4 right-4 text-right">

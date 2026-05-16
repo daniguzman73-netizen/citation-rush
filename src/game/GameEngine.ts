@@ -102,6 +102,13 @@ interface PoolEntry {
   lane: number
   airborne: boolean
   active: boolean
+  // Per-card animation phase. Random per spawn so cards bob/pulse out of sync.
+  bobPhase: number
+  // Cached "rest" Y so bob can oscillate around it without drifting.
+  restY: number
+  // Cached base sprite scale before per-frame pulse modulation.
+  baseScaleW: number
+  baseScaleH: number
 }
 
 interface Particle {
@@ -148,6 +155,9 @@ export class GameEngine {
 
   private cameraBasePos = new THREE.Vector3(0, 4.5, 7)
   private shakeT = 0       // seconds remaining on screen shake
+  private time = 0         // monotonic accumulator for card bob / pulse / flicker
+  // Brief scale-up bounce on the player on collect — seconds remaining.
+  private playerBounceT = 0
 
   private state: GameState = initialState()
   private subs = new Set<Subscriber>()
@@ -218,7 +228,10 @@ export class GameEngine {
     this.jumpT = -1
     this.spawnAccumulator = 0
     this.shakeT = 0
+    this.time = 0
+    this.playerBounceT = 0
     this.paused = false
+    this.player.scale.set(1, 1, 1)
     this.camera.position.copy(this.cameraBasePos)
     this.deactivateAll()
     for (const p of this.particles) { p.active = false; p.sprite.visible = false }
@@ -417,15 +430,18 @@ export class GameEngine {
         depthWrite: false,
       })
     }
-    // visual scale (world units) — keep aspect; height ≈ OBJECT_SIZE.h * 1.4 so cards read big
-    const scaleH = OBJECT_SIZE.h * 1.6
+    // visual scale (world units) — keep aspect; height ≈ OBJECT_SIZE.h * 1.6 so cards read big
+    const scaleH = OBJECT_SIZE.h * 1.7
     const scaleW = scaleH * CARD_ASPECT
     for (let i = 0; i < OBJECT_POOL_SIZE; i++) {
       const sprite = new THREE.Sprite(this.spriteMaterials.trusted)
       sprite.scale.set(scaleW, scaleH, 1)
       sprite.visible = false
       this.scene.add(sprite)
-      this.pool.push({ sprite, type: 'trusted', lane: 0, airborne: false, active: false })
+      this.pool.push({
+        sprite, type: 'trusted', lane: 0, airborne: false, active: false,
+        bobPhase: 0, restY: 0, baseScaleW: scaleW, baseScaleH: scaleH,
+      })
     }
   }
 
@@ -517,13 +533,17 @@ export class GameEngine {
       CITATION_SPECS[type].airborneEligible &&
       Math.random() < phase.airborneChance
 
+    const restY = airborne ? AIRBORNE_Y : GROUND_Y
     slot.active = true
     slot.type = type
     slot.lane = lane
     slot.airborne = airborne
     slot.sprite.material = this.spriteMaterials[type]
     slot.sprite.visible = true
-    slot.sprite.position.set(LANE_X[lane], airborne ? AIRBORNE_Y : GROUND_Y, SPAWN_Z)
+    slot.sprite.position.set(LANE_X[lane], restY, SPAWN_Z)
+    slot.sprite.scale.set(slot.baseScaleW, slot.baseScaleH, 1)
+    slot.restY = restY
+    slot.bobPhase = Math.random() * Math.PI * 2  // random per spawn so cards don't bob in lockstep
     return slot
   }
 
@@ -572,11 +592,54 @@ export class GameEngine {
 
   private updateCitations(dt: number) {
     const speed = this.currentTrackSpeed()
+    const t = this.time
     for (const p of this.pool) {
       if (!p.active) continue
+
+      // Scroll toward the player.
       p.sprite.position.z += speed * dt
+
+      // ── Per-card visual animation (cheap: 1–2 sin calls per card) ─────────
+      //
+      // Bob: a small vertical oscillation. ~2s cycle, ~0.08 world units of
+      //  amplitude. bobPhase is randomized per spawn so the field never
+      //  pulses in lockstep.
+      const bobOmega = Math.PI       // 2π/2s
+      const bobY = Math.sin(t * bobOmega + p.bobPhase) * 0.08
+      p.sprite.position.y = p.restY + bobY
+
+      // Type-specific overlay animations:
+      switch (p.type) {
+        case 'trusted': {
+          // Soft pulse — ~1.5s cycle, ±4% scale. Reads as "breathing glow".
+          const pulse = 1 + Math.sin(t * (2 * Math.PI / 1.5) + p.bobPhase) * 0.04
+          p.sprite.scale.set(p.baseScaleW * pulse, p.baseScaleH * pulse, 1)
+          break
+        }
+        case 'predatory': {
+          // Slow ominous pulse — ~3.5s cycle, ±5% scale.
+          const pulse = 1 + Math.sin(t * (2 * Math.PI / 3.5) + p.bobPhase) * 0.05
+          p.sprite.scale.set(p.baseScaleW * pulse, p.baseScaleH * pulse, 1)
+          break
+        }
+        case 'hallucinated': {
+          // Occasional brief displacement on X. Derived deterministically from
+          //  (time + phase) so each card "glitches" at different moments without
+          //  per-frame Math.random allocations.
+          const wave = Math.sin(t * 1.7 + p.bobPhase * 3.1)
+          const glitchActive = wave > 0.96
+          const offset = glitchActive ? (Math.sin(t * 53 + p.bobPhase * 17) * 0.18) : 0
+          p.sprite.position.x = LANE_X[p.lane] + offset
+          break
+        }
+        default:
+          // preprint, paywalled — static textures, only bob. No scale anim.
+          p.sprite.scale.set(p.baseScaleW, p.baseScaleH, 1)
+          break
+      }
+
+      // Despawn if it slipped past the player.
       if (p.sprite.position.z > DESPAWN_Z) {
-        // passed the player without collision
         if (p.type !== 'trusted') {
           const key = `${p.type}_dodged` as keyof RunStats
           this.state.stats[key] += 1
@@ -616,7 +679,8 @@ export class GameEngine {
         this.state.stats.trusted_collected += 1
         this.state.score += value
         this.pushPopup('collect', value)
-        this.emitParticles(collisionPoint, 'collect', 8)
+        this.emitParticles(collisionPoint, 'collect', 14)
+        this.playerBounceT = 0.22  // brief scale-up bounce on the player
         Audio.coin()
       } else {
         const hitKey = `${p.type}_hit` as keyof RunStats
@@ -668,6 +732,20 @@ export class GameEngine {
     }
   }
 
+  // Brief scale-up bounce on the player when collecting a trusted citation —
+  // 220ms total, peaks at +15% scale halfway through. Cheap (one sin call/frame).
+  private updatePlayerBounce(dt: number) {
+    if (this.playerBounceT > 0) {
+      this.playerBounceT = Math.max(0, this.playerBounceT - dt)
+      const t = 1 - this.playerBounceT / 0.22
+      const bump = Math.sin(t * Math.PI) * 0.15
+      const s = 1 + bump
+      this.player.scale.set(s, s, s)
+    } else {
+      this.player.scale.set(1, 1, 1)
+    }
+  }
+
   private deactivate(p: PoolEntry) {
     p.active = false
     p.sprite.visible = false
@@ -686,6 +764,7 @@ export class GameEngine {
     this.lastFrameTime = now
 
     if (this.state.phase === 'running' && !this.paused) {
+      this.time += dt
       this.state.timeRemaining = Math.max(0, this.state.timeRemaining - dt)
       this.maybeSpawn(dt)
       this.updatePlayer(dt)
@@ -702,6 +781,7 @@ export class GameEngine {
       this.updateParticles(dt)
       this.updateShakeAndFlash(dt)
       this.updatePopups(dt)
+      this.updatePlayerBounce(dt)
     }
     if (this.state.phase !== 'idle') this.emit()
 
