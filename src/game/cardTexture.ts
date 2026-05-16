@@ -155,7 +155,7 @@ const META: Record<CitationType, CardMeta> = {
   preprint:     { label: 'PREPRINT',  citation: 'Smith, 2025',               authorline: 'arXiv · not peer-reviewed',       drawIcon: iconDocClock },
   paywalled:    { label: 'PAYWALL',   citation: 'Tanaka, 2023',              authorline: 'Elsevier · access restricted',    drawIcon: iconLock },
   predatory:    { label: 'PREDATORY', citation: 'Kumar, 2024',               authorline: "Int'l J. Adv. Studies",           drawIcon: iconWarning },
-  hallucinated: { label: 'NOT FOUND', citation: 'Garcia, 2031',              authorline: 'Journal of [glitch]',             drawIcon: iconGhost },
+  hallucinated: { label: 'FABRICATED', citation: 'Garcia, 2031',             authorline: 'J. Synthetic Cognition · 47(99)', drawIcon: iconGhost },
   retracted:    { label: 'RETRACTED', citation: 'Anderson, 2019',            authorline: 'Withdrawn · J. Cell Biology',     drawIcon: iconRetracted },
 }
 

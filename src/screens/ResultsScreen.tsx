@@ -13,7 +13,7 @@ const badTypeMeta = [
   { key: 'predatory',    emoji: '💀', label: 'Predatory journals',     blurb: 'Pay-to-publish outlets with little or no peer review.' },
   { key: 'preprint',     emoji: '⚠️', label: 'Unreviewed preprints',    blurb: 'Early drafts shared before peer review — worth verifying.' },
   { key: 'paywalled',    emoji: '🔒', label: 'Paywalled sources',       blurb: "Behind a paywall and not in your library's collection." },
-  { key: 'hallucinated', emoji: '👻', label: 'Hallucinated citations',  blurb: "AI invented these — they don't exist." },
+  { key: 'hallucinated', emoji: '👻', label: 'Hallucinated citations',  blurb: "AI invented these. The paper, authors, or journal don't exist. Nexus catches these automatically." },
   { key: 'retracted',    emoji: '🚫', label: 'Retracted papers',        blurb: 'Previously published but formally withdrawn — should no longer be cited.' },
 ] as const
 

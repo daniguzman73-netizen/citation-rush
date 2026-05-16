@@ -156,7 +156,7 @@ After 30 seconds of inactivity at any non-gameplay screen, return to Screen 1.
 | ⚠️ **Preprint** | Yellow | Document w/ clock | "PREPRINT" | — | +10 | −50 | "Smith, 2025 — *arXiv*" |
 | 🔒 **Paywalled** | Orange | Lock | "PAYWALL" | — | +15 | −50 | "Tanaka, 2023 — *Elsevier*" |
 | 💀 **Predatory** | Dark red | Warning triangle | "PREDATORY" | — | +25 | −100 | "Kumar, 2024 — *Int'l J. Adv. Studies*" |
-| 👻 **Hallucinated** | Purple/glitchy | Ghost / pixelated | "NOT FOUND" | — | +25 | −100 | "Garcia, 2031 — *Journal of [glitch]*" |
+| 👻 **Hallucinated** | Purple/glitchy | Ghost / pixelated | "FABRICATED" | — | +25 | −100 | "Garcia, 2031 — *J. Synthetic Cognition · 47(99)*" — impossible future year, invented journal, implausible volume/issue |
 | 🚫 **Retracted** | Dark slate + red strike | Circle-with-slash | "RETRACTED" | — | +20 | −75 | "Anderson, 2019 — *withdrawn, J. Cell Biology*" |
 
 **Why the differentiated scoring matters:** A librarian watching someone play sees "+25 predatory dodge vs +10 preprint dodge" and intuits the risk hierarchy without anyone explaining it. That's the educational payload of differentiated scoring — it works through the audience around the player, not just the player.
