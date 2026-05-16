@@ -27,7 +27,13 @@ import {
   type CitationType,
 } from './constants'
 import { createCardTextures, CARD_ASPECT } from './cardTexture'
-import { createPaperFloorTexture, PAPER_REPEAT_V } from './paperTexture'
+import {
+  createPaperFloorTexture,
+  createPageEdgeShadowTexture,
+  createPageNumberCanvas,
+  drawPageNumberTexture,
+  PAPER_REPEAT_V,
+} from './paperTexture'
 import { Audio } from '../audio/Audio'
 
 // Scene environment — warm cream paper world, matching the Nexus Booth aesthetic.
@@ -130,6 +136,19 @@ const PARTICLE_POOL_SIZE = 24
 const SHAKE_DURATION = 0.18
 const HIT_FLASH_DURATION = 0.35
 
+// Scrolling "p. 247", "p. 248"… decals in the periphery. Pure decoration —
+// no collision, no scoring, no effect on gameplay. Pool of 4 planes that
+// recycle to far-Z with the next page number whenever they pass the player.
+interface PageNumberDecal {
+  mesh: THREE.Mesh
+  canvas: HTMLCanvasElement
+  texture: THREE.CanvasTexture
+  currentNumber: number
+}
+const PAGE_NUMBER_POOL_SIZE = 4
+const PAGE_NUMBER_START = 247    // arbitrary "book" starting page
+const PAGE_NUMBER_X = 3.6        // outside the lane area (lanes end at ±3.3)
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Engine
 // ─────────────────────────────────────────────────────────────────────────────
@@ -157,6 +176,10 @@ export class GameEngine {
   private particleTexture!: THREE.Texture
   private particleGoldMat!: THREE.SpriteMaterial
   private particleRedMat!: THREE.SpriteMaterial
+
+  // Decorative scrolling page-number decals (Phase 6 polish — pure visual).
+  private pageNumberDecals: PageNumberDecal[] = []
+  private nextPageNumber = PAGE_NUMBER_START
 
   private cameraBasePos = new THREE.Vector3(0, 4.5, 7)
   private shakeT = 0       // seconds remaining on screen shake
@@ -303,10 +326,11 @@ export class GameEngine {
     this.trackGroup = new THREE.Group()
 
     // Floor — one big manuscript page running into the distance. The texture
-    // bakes in: cream paper grain, faint ruled lines, blurred margin "body
-    // text", sparse red margin scribbles, and the four pencil-stroke lane
-    // dividers. Tiled along Z so it covers the full track length without
-    // stretching the paper artifacts.
+    // bakes in: cream paper grain, alternating-tone lane shading, serif
+    // Lorem-Ipsum body text in the margins, faint horizontal rule lines,
+    // sparse red margin scribbles, warm-brown ink dividers with perspective
+    // ticks, and a baked "p. 247" page number per tile. Tiled along Z so it
+    // covers the full track length without stretching the paper artifacts.
     const floorWidth = LANE_X[LANE_COUNT - 1] - LANE_X[0] + 3
     const paper = createPaperFloorTexture()
     paper.repeat.set(1, PAPER_REPEAT_V)
@@ -320,7 +344,67 @@ export class GameEngine {
     floor.position.z = SPAWN_Z / 2 + DESPAWN_Z / 2
     this.trackGroup.add(floor)
 
+    // Page-edge shadow — a thin band right at the player's feet, painted
+    // with a vertical gradient so it reads as the paper having physical
+    // thickness as the camera looks down on it.
+    const edgeTex = createPageEdgeShadowTexture()
+    const edgeGeo = new THREE.PlaneGeometry(floorWidth, 3.2)
+    const edgeMat = new THREE.MeshBasicMaterial({ map: edgeTex, transparent: true, depthWrite: false })
+    const edge = new THREE.Mesh(edgeGeo, edgeMat)
+    edge.rotation.x = -Math.PI / 2
+    // Position so the "near" (dark) edge of the gradient lands right at the
+    // front of the visible floor, just behind the player. Texture's V=1 is
+    // bottom; with rotation.x = -π/2 the plane is laid flat with V=1 facing
+    // the camera. Center the plane at z = 4 so it covers ~z=2.4 to z=5.6.
+    edge.position.set(0, 0.015, 4.0)
+    this.trackGroup.add(edge)
+
+    // Page-number decal pool — small flat planes scrolling at track speed,
+    // recycled with the next page number when they pass the player.
+    this.buildPageNumberDecals()
+
     this.scene.add(this.trackGroup)
+  }
+
+  private buildPageNumberDecals() {
+    // Stagger initial Z positions so the decals are spread along the track.
+    const initialZs = [-20, -45, -70, -85]
+    const xSides = [-PAGE_NUMBER_X, PAGE_NUMBER_X, -PAGE_NUMBER_X, PAGE_NUMBER_X]
+
+    for (let i = 0; i < PAGE_NUMBER_POOL_SIZE; i++) {
+      const canvas = createPageNumberCanvas()
+      drawPageNumberTexture(canvas, this.nextPageNumber++)
+      const texture = new THREE.CanvasTexture(canvas)
+      texture.colorSpace = THREE.SRGBColorSpace
+
+      const geo = new THREE.PlaneGeometry(1.4, 0.55)
+      const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false })
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.rotation.x = -Math.PI / 2
+      mesh.position.set(xSides[i], 0.02, initialZs[i])
+      this.trackGroup.add(mesh)
+      this.pageNumberDecals.push({
+        mesh,
+        canvas,
+        texture,
+        currentNumber: this.nextPageNumber - 1,
+      })
+    }
+  }
+
+  // Per-frame scroll: page-number decals move with the track speed and
+  // recycle to far-Z with the next page number when they pass the player.
+  private updatePageNumberDecals(dt: number) {
+    const speed = this.currentTrackSpeed()
+    for (const d of this.pageNumberDecals) {
+      d.mesh.position.z += speed * dt
+      if (d.mesh.position.z > DESPAWN_Z + 2) {
+        d.currentNumber = this.nextPageNumber++
+        drawPageNumberTexture(d.canvas, d.currentNumber)
+        d.texture.needsUpdate = true
+        d.mesh.position.z = SPAWN_Z - 4 + Math.random() * 6
+      }
+    }
   }
 
   private buildPlayer() {
@@ -773,6 +857,7 @@ export class GameEngine {
       this.maybeSpawn(dt)
       this.updatePlayer(dt)
       this.updateCitations(dt)
+      this.updatePageNumberDecals(dt)
       this.checkCollisions()
       if (this.state.phase === 'running' && this.state.timeRemaining <= 0) {
         this.endRun('time')
