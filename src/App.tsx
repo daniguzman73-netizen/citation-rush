@@ -31,7 +31,6 @@ export default function App() {
   const pageHidden = usePageVisibility()
 
   const handleStart = useCallback(() => setScreen('intake'), [])
-  const handleSkipToDemo = useCallback(() => setScreen('demo'), [])
 
   const handleIntakeSubmit = useCallback((info: PlayerInfo) => {
     setPlayer(info)
@@ -137,8 +136,6 @@ export default function App() {
       {screen === 'welcome' && (
         <WelcomeScreen
           onStart={handleStart}
-          onSkipToDemo={handleSkipToDemo}
-          onSeeLeaderboard={handleSeeLeaderboard}
           onAdminOpen={() => setAdminOpen(true)}
         />
       )}
@@ -175,7 +172,10 @@ export default function App() {
         />
       )}
 
-      {screen !== 'game' && screen !== 'countdown' && (
+      {/* Mute toggle is suppressed on welcome (overlaps the bottom leaderboard ticker)
+          and obviously on the countdown/gameplay screens. The admin panel has its
+          own audio toggle for booth staff. */}
+      {screen !== 'game' && screen !== 'countdown' && screen !== 'welcome' && (
         <div className="absolute bottom-4 left-4 z-10">
           <MuteToggle />
         </div>

@@ -9,6 +9,8 @@
 
   --animate-fade-in:  fadeIn 0.25s ease-out both;
   --animate-slide-up: slideUp 0.25s ease-out both;
+  --animate-float-a:  floatA 9s ease-in-out infinite;
+  --animate-float-b:  floatB 7s ease-in-out infinite;
 }
 
 @keyframes fadeIn {
@@ -19,6 +21,17 @@
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(10px) }
   to   { opacity: 1; transform: translateY(0)    }
+}
+
+/* Welcome-screen background orbs — ported from Citation Challenge so the
+   two booth experiences read as siblings. */
+@keyframes floatA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(20px, -30px) scale(1.04); }
+}
+@keyframes floatB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-15px, 25px) scale(0.97); }
 }
 
 /* Custom utilities — ported from Citation Challenge for the Nexus reveal screen. */
