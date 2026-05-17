@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { storage, type Run } from '../storage'
+import CreditsModal from '../components/CreditsModal'
 
 interface Props {
   onStart: () => void
@@ -14,6 +15,7 @@ function shortInstitution(s: string): string {
 export default function WelcomeScreen({ onStart, onAdminOpen }: Props) {
   const [entries, setEntries] = useState<Run[] | null>(null)
   const [tickIdx, setTickIdx] = useState(0)
+  const [creditsOpen, setCreditsOpen] = useState(false)
 
   // Pull today's top 3 on mount.
   useEffect(() => {
@@ -181,7 +183,20 @@ export default function WelcomeScreen({ onStart, onAdminOpen }: Props) {
             </div>
           )}
         </div>
+
+        {/* Credits link — low visual weight, opens modal listing third-party assets */}
+        <div className="flex justify-center pb-2">
+          <button
+            type="button"
+            onPointerDown={() => setCreditsOpen(true)}
+            className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Credits
+          </button>
+        </div>
       </div>
+
+      {creditsOpen && <CreditsModal onClose={() => setCreditsOpen(false)} />}
     </div>
   )
 }

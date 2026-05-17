@@ -34,7 +34,7 @@ import {
   drawPageNumberTexture,
   PAPER_REPEAT_V,
 } from './paperTexture'
-import { createOwl, OWL_ANIM, type OwlRefs } from './playerOwl'
+import { createOwlScene, OWL_ANIM, type OwlRefs } from './playerOwl'
 import { Audio } from '../audio/Audio'
 
 // Scene environment — warm cream paper world, matching the Nexus Booth aesthetic.
@@ -432,10 +432,10 @@ export class GameEngine {
   }
 
   private buildPlayer() {
-    // Stylized geometric owl scholar — replaces the placeholder cube. Built
-    // entirely from primitives in playerOwl.ts. `root` is the engine-facing
-    // group (= this.player), `visual` is the bob-carrying child.
-    this.owl = createOwl()
+    // GLB-driven owl from /models/owl.glb. The model loads asynchronously; a
+    // tiny placeholder cube renders until it's ready. `root` is the engine-
+    // facing group, `visual` carries the running bob.
+    this.owl = createOwlScene()
     this.player = this.owl.root
     this.player.position.set(this.playerX, this.playerY, PLAYER_Z)
     this.scene.add(this.player)
@@ -690,9 +690,9 @@ export class GameEngine {
 
     this.player.position.set(this.playerX, this.playerY, PLAYER_Z)
 
-    // Owl rig: running bob + wing flap + foot alternation + head tilt, plus
-    // jump pose, lane roll, and hit shake. All purely visual — does not
-    // affect collision (which uses playerX/playerY/PLAYER_Z directly).
+    // GLB-driven owl: procedural rigid-body animation only — no sub-part
+    // articulation. Bob on the visual child, plus body roll / jump tilt /
+    // hit shake on the root.
     this.updateOwlAnimation(dt)
   }
 
@@ -704,54 +704,15 @@ export class GameEngine {
     // sine envelope peaks at apex (progress = 0.5) → 1, eases to 0 at takeoff/landing
     const jumpEnvelope = jumping ? Math.sin(Math.PI * jumpProgress) : 0
 
-    // Running cycle phase (radians) — drives bob, flap, foot swing, head tilt.
+    // Running cycle phase (radians) — drives the body bob.
     const cycleOmega = (2 * Math.PI) / OWL_ANIM.runCycleSeconds
-    const phase = t * cycleOmega
-    const sinPhase = Math.sin(phase)
+    const sinPhase = Math.sin(t * cycleOmega)
 
-    // ── Running bob on the visual sub-group ────────────────────────────────
+    // ── Running bob on the visual sub-group ───────────────────────────────
     // Only when grounded; in the air, the body holds a forward-tilt pose.
     owl.visual.position.y = jumping ? 0 : sinPhase * OWL_ANIM.runBobAmplitude
 
-    // ── Wings: alternating flap when running, both extend out when jumping ─
-    if (jumping) {
-      const extend = jumpEnvelope * OWL_ANIM.jumpWingExtendRad
-      owl.leftWing.rotation.z  = -extend
-      owl.rightWing.rotation.z = +extend
-    } else {
-      // Same-sign rotation on both wings = ALTERNATING flap (left up while
-      // right down, by pivot symmetry — see the owl rig file for the geometry
-      // reasoning).
-      const flap = sinPhase * OWL_ANIM.runFlapAmplitudeRad
-      owl.leftWing.rotation.z  = flap
-      owl.rightWing.rotation.z = flap
-    }
-
-    // ── Feet: forward/back alternation when running, tucked when jumping ───
-    if (jumping) {
-      const tuck = jumpEnvelope * OWL_ANIM.jumpFootTuckY
-      owl.leftFoot.position.y  = -0.62 + tuck
-      owl.rightFoot.position.y = -0.62 + tuck
-      owl.leftFoot.position.z  = 0
-      owl.rightFoot.position.z = 0
-    } else {
-      owl.leftFoot.position.y  = -0.62
-      owl.rightFoot.position.y = -0.62
-      owl.leftFoot.position.z  =  sinPhase * OWL_ANIM.runFootSwingZ
-      owl.rightFoot.position.z = -sinPhase * OWL_ANIM.runFootSwingZ
-    }
-
-    // ── Head: subtle bob-coupled tilt; stays mostly steady ─────────────────
-    owl.head.rotation.x = sinPhase * OWL_ANIM.runHeadTiltRad
-
-    // ── Tail: tiny wag in sync with bob — adds to the resting droop angle ──
-    // Tail's rest rotation.x = -0.32 (drooping down). Wag adds a small swing.
-    owl.tail.rotation.x = -0.32 + sinPhase * OWL_ANIM.runTailWagRad
-    owl.tail.rotation.y = sinPhase * OWL_ANIM.runTailWagRad * 0.6
-
-    // ── Body roll: lane-switch tilt (target lerped, smooth) ────────────────
-    // Roll proportional to "how far we still are from the target lane",
-    // clamped, then eased toward that target so the roll feels weighted.
+    // ── Body roll: lane-switch tilt, smoothed lerp ────────────────────────
     const laneDelta = LANE_X[this.playerTargetLane] - this.playerX
     const targetRoll = jumping
       ? 0
@@ -762,22 +723,16 @@ export class GameEngine {
         )
     this.playerRoll = THREE.MathUtils.lerp(this.playerRoll, targetRoll, OWL_ANIM.laneTiltLerp)
 
-    // ── Hit shake: ±10° body wobble + pupil scale-up (180ms total) ─────────
+    // ── Hit shake: ±10° body wobble on Z for 180ms ────────────────────────
     let shakeRoll = 0
-    let pupilMul = 1
     if (this.playerShakeT > 0) {
       this.playerShakeT = Math.max(0, this.playerShakeT - dt)
       const remaining = this.playerShakeT / OWL_ANIM.hitShakeDuration
       // High-frequency wobble that decays with the timer.
       shakeRoll = Math.sin(this.time * 80) * OWL_ANIM.hitShakeAmpRad * remaining
-      // Pupils scale up while shaking, return to baseline as it fades.
-      pupilMul = 1 + (OWL_ANIM.hitPupilScaleMul - 1) * remaining
     }
-    // Pupil scale (mesh.scale, applied to a unit-sphere geometry → base * mul)
-    owl.leftPupil.scale.setScalar(0.08 * pupilMul)
-    owl.rightPupil.scale.setScalar(0.08 * pupilMul)
 
-    // ── Compose final rotations on the root ────────────────────────────────
+    // ── Compose final rotations on the root ──────────────────────────────
     // X: forward tilt during jump (negative X tilts top toward -Z = forward).
     this.player.rotation.x = -jumpEnvelope * OWL_ANIM.jumpForwardTiltRad
     // Z: lane roll + hit shake.
@@ -874,7 +829,7 @@ export class GameEngine {
         this.state.score += value
         this.pushPopup('collect', value)
         this.emitParticles(collisionPoint, 'collect', 14)
-        this.playerBounceT = 0.22  // brief scale-up bounce on the player
+        this.playerBounceT = OWL_ANIM.collectBounceDuration
         Audio.coin()
       } else {
         const hitKey = `${p.type}_hit` as keyof RunStats
@@ -928,12 +883,13 @@ export class GameEngine {
   }
 
   // Brief scale-up bounce on the player when collecting a trusted citation —
-  // 220ms total, peaks at +15% scale halfway through. Cheap (one sin call/frame).
+  // 100ms total, peaks at +10% scale halfway through (per spec).
   private updatePlayerBounce(dt: number) {
+    const duration = OWL_ANIM.collectBounceDuration
     if (this.playerBounceT > 0) {
       this.playerBounceT = Math.max(0, this.playerBounceT - dt)
-      const t = 1 - this.playerBounceT / 0.22
-      const bump = Math.sin(t * Math.PI) * 0.15
+      const t = 1 - this.playerBounceT / duration
+      const bump = Math.sin(t * Math.PI) * OWL_ANIM.collectBouncePeak
       const s = 1 + bump
       this.player.scale.set(s, s, s)
     } else {

@@ -1,310 +1,124 @@
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
-// Stylized geometric owl scholar — rebuilt for rear-three-quarter camera read.
+// Player character — pre-made low-poly owl model loaded from /models/owl.glb.
 //
-// The previous pass landed as a featureless dark blob: equal-sized head and
-// body, dark saturated brown, no visible ear tufts/wings/tail/feet from the
-// camera. This pass fixes the silhouette so all four bird identifiers (ear
-// tufts, wings, tail, feet) read from behind, body is pear-shaped, and the
-// palette is light enough to pop against the cream paper world.
+// We keep the same two-group hierarchy the engine has always driven:
+//   root   = this.player — engine sets position / rotation / scale (lane lerp,
+//            jump arc, lane roll, jump forward-tilt, hit shake, collect bounce)
+//   visual = child of root, carries the running bob so the bob doesn't pollute
+//            collision math
 //
-// Hierarchy:
-//   root (= this.player) — engine drives position / scale / rotation
-//   └── visual            — child group; carries the running bob
-//       ├── body          — sandy tan sphere, taller than wide (pear body)
-//       ├── belly         — pale cream patch on front
-//       ├── tail          — darker-brown wedge sticking BACK (+Z, toward camera)
-//       ├── leftWing      — pivoted group, hangs outward-down on -X
-//       ├── rightWing     — pivoted group, hangs outward-down on +X
-//       ├── leftFoot      — pivoted group, alternates forward/back
-//       ├── rightFoot     — pivoted group, alternates forward/back
-//       ├── book          — accessory under LEFT wing (-X)
-//       └── head          — own group for tilt
-//           ├── headSphere
-//           ├── faceDisc  — pale cream disc on front
-//           ├── leftEar   — body-color cone, outward + back-tilted
-//           ├── rightEar
-//           ├── leftEye / leftPupil
-//           ├── rightEye / rightPupil
-//           ├── beak      — orange cone
-//           └── cap       — graduation cap accessory
+// The GLTF scene attaches as a single child of `visual`. There are NO sub-part
+// refs (wings, feet, head, etc.) — the model is animated procedurally as a
+// rigid body. A simple placeholder cube renders until the GLB finishes loading
+// (kiosk flow gives ~10+s of welcome→intake→tutorial→countdown before any
+// gameplay, so in practice this is invisible).
+//
+// Model attribution lives in src/data/credits.ts.
 
 export interface OwlRefs {
   root: THREE.Group
   visual: THREE.Group
-  body: THREE.Mesh
-  head: THREE.Group
-  leftWing: THREE.Group
-  rightWing: THREE.Group
-  leftFoot: THREE.Group
-  rightFoot: THREE.Group
-  leftPupil: THREE.Mesh
-  rightPupil: THREE.Mesh
-  tail: THREE.Mesh
-  cap: THREE.Group
-  book: THREE.Group
+  isReady: () => boolean
   disposables: { dispose: () => void }[]
 }
 
-// Warm, light palette — bumped one stop lighter so the owl reads bright
-// against the cream paper. Relative relationships preserved: head lighter
-// than body, wing darker for silhouette contrast, tail darker still, belly +
-// face disc are the brightest cream values.
-const COLORS = {
-  body:       0xDFC295,   // sandy buff — lifted from 0xC8A878
-  belly:      0xF0DEC2,   // pale cream — lifted from 0xE8D5B7
-  head:       0xE6CFA8,   // light tan — lifted from 0xD4B896
-  faceDisc:   0xF7ECD3,   // near-white cream — barn-owl facial disc
-  wing:       0xA48560,   // mid-brown — lifted from 0x8B6F47 (still darker than body for contrast)
-  tail:       0x856B47,   // darker brown — lifted from 0x6B5535
-  eyeWhite:   0xF5F1E8,   // warm white
-  pupil:      0x1F1A14,   // near-black
-  beak:       0xE8A03A,   // orange
-  feet:       0xE8A03A,   // orange
-  capDark:    0x1A2B45,   // deep navy
-  tassel:     0xE0B83B,   // gold
-  bookCover:  0x8B2730,   // deep red
-  bookSpine:  0xD4AF37,   // gold spine
-}
+const MODEL_URL = '/models/owl.glb'
 
-export function createOwl(): OwlRefs {
+// Target visual height in world units (similar to the previous geometric owl).
+const TARGET_HEIGHT = 1.5
+
+// The lane surface that the owl's feet should sit flush with. Group origin in
+// world is at PLAYER_Y_GROUND = 0.7; floor is at world y=0. In group-local
+// coords, "feet on the floor" means model's bounding-box bottom at y = -0.7.
+const FLOOR_LOCAL_Y = -0.7
+
+// Loader instance — share across sessions if the engine is ever recreated.
+const loader = new GLTFLoader()
+
+export function createOwlScene(): OwlRefs {
   const disposables: { dispose: () => void }[] = []
 
-  // ── Shared primitive geometries ───────────────────────────────────────────
-  const sphere   = new THREE.SphereGeometry(1, 18, 14)
-  const cone     = new THREE.ConeGeometry(1, 1, 12)
-  const cylinder = new THREE.CylinderGeometry(1, 1, 1, 12)
-  const box      = new THREE.BoxGeometry(1, 1, 1)
-  disposables.push(sphere, cone, cylinder, box)
-
-  // ── Materials — Phong for crisp lit-side / shadow-side without textures ───
-  const matBody     = new THREE.MeshPhongMaterial({ color: COLORS.body,     shininess: 4 })
-  const matBelly    = new THREE.MeshPhongMaterial({ color: COLORS.belly,    shininess: 6 })
-  const matHead     = new THREE.MeshPhongMaterial({ color: COLORS.head,     shininess: 4 })
-  const matFaceDisc = new THREE.MeshPhongMaterial({ color: COLORS.faceDisc, shininess: 6 })
-  const matWing     = new THREE.MeshPhongMaterial({ color: COLORS.wing,     shininess: 2 })
-  const matTail     = new THREE.MeshPhongMaterial({ color: COLORS.tail,     shininess: 2 })
-  const matEye      = new THREE.MeshPhongMaterial({ color: COLORS.eyeWhite, shininess: 60 })
-  const matPupil    = new THREE.MeshPhongMaterial({ color: COLORS.pupil,    shininess: 80 })
-  const matBeak     = new THREE.MeshPhongMaterial({ color: COLORS.beak,     shininess: 30 })
-  const matFeet     = new THREE.MeshPhongMaterial({ color: COLORS.feet,     shininess: 20 })
-  const matCap      = new THREE.MeshPhongMaterial({ color: COLORS.capDark,  shininess: 30 })
-  const matTassel   = new THREE.MeshPhongMaterial({ color: COLORS.tassel,   shininess: 50 })
-  const matBookCv   = new THREE.MeshPhongMaterial({ color: COLORS.bookCover,shininess: 12 })
-  const matBookSp   = new THREE.MeshPhongMaterial({ color: COLORS.bookSpine,shininess: 40 })
-  disposables.push(
-    matBody, matBelly, matHead, matFaceDisc, matWing, matTail,
-    matEye, matPupil, matBeak, matFeet, matCap, matTassel, matBookCv, matBookSp,
-  )
-
-  // ── Root + visual sub-group ───────────────────────────────────────────────
-  // root.position is the engine-driven center (PLAYER_Y_GROUND world). visual
-  // carries the running bob so it doesn't leak into collision math. All owl
-  // children are local to visual.
-  const root = new THREE.Group()
+  const root   = new THREE.Group()
   const visual = new THREE.Group()
   root.add(visual)
 
-  // ── Body — squat compressed sphere (more round than tall) ────────────────
-  // Reduced height ~25% from the previous pass and widened ~10% so the
-  // silhouette reads as a round, slightly-flat owl body rather than an
-  // upright cylinder/snowman base.
-  const body = new THREE.Mesh(sphere, matBody)
-  body.scale.set(0.605, 0.465, 0.42)   // width 1.21, height 0.93, depth 0.84
-  body.position.y = -0.10
-  visual.add(body)
+  // Placeholder while the GLB loads — kept intentionally tiny / unobtrusive
+  // since it'll vanish before the visitor sees gameplay in any realistic kiosk
+  // flow. If load fails entirely, this is what they'll see.
+  const placeholderGeo = new THREE.BoxGeometry(0.6, 1.2, 0.5)
+  const placeholderMat = new THREE.MeshPhongMaterial({ color: 0xDFC295 })
+  const placeholder = new THREE.Mesh(placeholderGeo, placeholderMat)
+  placeholder.position.y = 0
+  visual.add(placeholder)
+  disposables.push(placeholderGeo, placeholderMat)
 
-  // ── Belly — pale cream cap on the FRONT of the body, larger so the side
-  // edges peek into the rear-three-quarter view ──────────────────────────────
-  // The cream wraps further around the body sides than before. The cream
-  // sphere intersects the brown body sphere so the FRONT and FLANKS read
-  // cream, while the BACK (camera-facing) keeps the tan body color.
-  const belly = new THREE.Mesh(sphere, matBelly)
-  belly.scale.set(0.50, 0.40, 0.30)
-  belly.position.set(0, -0.10, -0.20)
-  visual.add(belly)
+  let ready = false
 
-  // ── Tail — darker wedge sticking BACK toward the camera, slightly down ────
-  // From the rear three-quarter camera the tail is one of the strongest
-  // identifying silhouettes (it actually points toward the viewer).
-  const tail = new THREE.Mesh(sphere, matTail)
-  tail.scale.set(0.20, 0.10, 0.32)
-  tail.position.set(0, -0.34, 0.46)
-  tail.rotation.x = -0.32   // tip droops down a bit
-  visual.add(tail)
+  loader.load(
+    MODEL_URL,
+    (gltf) => {
+      const model = gltf.scene
 
-  // ── Head group ────────────────────────────────────────────────────────────
-  // Head sits low on the body — minimal gap. Body top is at owl-local y=+0.365;
-  // head bottom (with scale 0.44) lands at y=+0.18, which means the head's
-  // lower portion sits inside the body. Visually the head is "almost directly
-  // on the body" per the brief.
-  const head = new THREE.Group()
-  head.position.set(0, 0.62, -0.04)
-  visual.add(head)
+      // Measure → scale to target height → translate so feet land on floor.
+      const preBox = new THREE.Box3().setFromObject(model)
+      const preSize = new THREE.Vector3()
+      preBox.getSize(preSize)
+      const scale = preSize.y > 0 ? TARGET_HEIGHT / preSize.y : 1
+      model.scale.setScalar(scale)
 
-  const headSphere = new THREE.Mesh(sphere, matHead)
-  headSphere.scale.set(0.44, 0.44, 0.44)
-  head.add(headSphere)
+      // Recompute after scaling.
+      const postBox = new THREE.Box3().setFromObject(model)
+      // We want the model's lowest point at group-local y = FLOOR_LOCAL_Y so
+      // feet land flush on world y = 0.
+      model.position.y = FLOOR_LOCAL_Y - postBox.min.y
 
-  // Face disc — pale cream nearly-flat disc on the head's front.
-  const faceDisc = new THREE.Mesh(sphere, matFaceDisc)
-  faceDisc.scale.set(0.38, 0.40, 0.06)
-  faceDisc.position.set(0, 0.02, -0.40)
-  head.add(faceDisc)
+      // Most GLBs ship with the model facing +Z. The engine treats -Z as
+      // "forward" (the direction of travel, away from the camera). Rotate 180°
+      // so the owl looks where it's running.
+      model.rotation.y = Math.PI
 
-  // ── Ear tufts — clearly visible above the cap ─────────────────────────────
-  // Two fixes vs the previous pass:
-  //   (1) rotation.z sign was inverted, tilting the tufts INWARD toward each
-  //       other rather than outward. Flipped here.
-  //   (2) The mortarboard (cap.width = 0.68) extends past the head edges and
-  //       was visually covering the previous tufts. Tufts are now scaled
-  //       taller (Y 0.55) and positioned higher (head-y 0.36 → apex extends
-  //       above the cap), with outward tilt strong enough that the tips
-  //       clear the cap silhouette.
-  const earL = new THREE.Mesh(cone, matBody)
-  earL.scale.set(0.10, 0.55, 0.10)
-  earL.position.set(-0.22, 0.36, 0.04)
-  earL.rotation.set(-0.12, 0, +0.38)   // back + OUTWARD (positive z for left = -X direction)
-  head.add(earL)
+      // Swap in: remove placeholder, attach model.
+      visual.remove(placeholder)
+      placeholderGeo.dispose()
+      placeholderMat.dispose()
+      visual.add(model)
 
-  const earR = new THREE.Mesh(cone, matBody)
-  earR.scale.set(0.10, 0.55, 0.10)
-  earR.position.set(0.22, 0.36, 0.04)
-  earR.rotation.set(-0.12, 0, -0.38)   // back + OUTWARD (negative z for right = +X direction)
-  head.add(earR)
-
-  // ── Eyes — large white spheres, pushed further to the sides so a sliver of
-  // the head's lit-side eye is more likely to catch the camera during tilts ─
-  const eyeR = 0.17
-  const leftEye = new THREE.Mesh(sphere, matEye)
-  leftEye.scale.setScalar(eyeR)
-  leftEye.position.set(-0.28, 0.04, -0.36)
-  head.add(leftEye)
-
-  const rightEye = new THREE.Mesh(sphere, matEye)
-  rightEye.scale.setScalar(eyeR)
-  rightEye.position.set(0.28, 0.04, -0.36)
-  head.add(rightEye)
-
-  const pupilBase = 0.08
-  const leftPupil = new THREE.Mesh(sphere, matPupil)
-  leftPupil.scale.setScalar(pupilBase)
-  leftPupil.position.set(-0.28, 0.04, -0.46)
-  head.add(leftPupil)
-
-  const rightPupil = new THREE.Mesh(sphere, matPupil)
-  rightPupil.scale.setScalar(pupilBase)
-  rightPupil.position.set(0.28, 0.04, -0.46)
-  head.add(rightPupil)
-
-  // ── Beak — small orange cone, apex forward (-Z) ──────────────────────────
-  const beak = new THREE.Mesh(cone, matBeak)
-  beak.scale.set(0.09, 0.18, 0.09)
-  beak.position.set(0, -0.10, -0.46)
-  beak.rotation.x = -Math.PI / 2
-  head.add(beak)
-
-  // ── Wings — shorter (~50% of body height) and higher (attach near body top) ─
-  // Pivot sits just below the head, wing extends from there down to about the
-  // middle of the body. Resting outward tilt is baked into the wing mesh so
-  // pivot.rotation stays pure animation.
-  const makeWing = (side: 1 | -1): THREE.Group => {
-    const pivot = new THREE.Group()
-    pivot.position.set(side * 0.34, 0.28, 0)   // higher attachment (body top ~+0.365)
-    const wing = new THREE.Mesh(sphere, matWing)
-    wing.scale.set(0.14, 0.26, 0.22)            // length 0.52 ≈ 56% of body height
-    wing.position.set(0, -0.24, 0.02)
-    wing.rotation.z = side * 0.22
-    pivot.add(wing)
-    visual.add(pivot)
-    return pivot
-  }
-  const leftWing  = makeWing(-1)
-  const rightWing = makeWing(+1)
-
-  // ── Feet — pivot just below new body bottom (-0.565), foot mesh longer in Z
-  // so the back-swung foot clearly extends past the body silhouette ─────────
-  const makeFoot = (side: 1 | -1): THREE.Group => {
-    const pivot = new THREE.Group()
-    pivot.position.set(side * 0.17, -0.62, 0.04)
-    const foot = new THREE.Mesh(sphere, matFeet)
-    foot.scale.set(0.13, 0.07, 0.28)
-    pivot.add(foot)
-    visual.add(pivot)
-    return pivot
-  }
-  const leftFoot  = makeFoot(-1)
-  const rightFoot = makeFoot(+1)
-
-  // ── Graduation cap (accessory, child of head so it tilts with head) ───────
-  const cap = new THREE.Group()
-  cap.position.set(0, 0.46, 0.02)
-  const capBase = new THREE.Mesh(cylinder, matCap)
-  capBase.scale.set(0.30, 0.11, 0.30)
-  cap.add(capBase)
-  const mortarboard = new THREE.Mesh(box, matCap)
-  mortarboard.scale.set(0.68, 0.04, 0.68)
-  mortarboard.position.y = 0.08
-  cap.add(mortarboard)
-  // Gold tassel — cord + ball — hanging off one corner of the mortarboard.
-  const tasselCord = new THREE.Mesh(cylinder, matTassel)
-  tasselCord.scale.set(0.014, 0.18, 0.014)
-  tasselCord.position.set(0.28, -0.02, -0.04)
-  cap.add(tasselCord)
-  const tasselBall = new THREE.Mesh(sphere, matTassel)
-  tasselBall.scale.setScalar(0.055)
-  tasselBall.position.set(0.28, -0.17, -0.04)
-  cap.add(tasselBall)
-  head.add(cap)
-
-  // ── Book tucked under LEFT wing — repositioned to peek out at the new
-  // (shorter) wing's bottom edge. Wing extends y ≈ +0.28 to ≈ 0, so book
-  // sits at y ≈ -0.18 with its top edge just below the wing's bottom. ──────
-  const book = new THREE.Group()
-  book.position.set(-0.32, -0.18, 0.20)
-  book.rotation.set(0, -0.10, -0.18)
-  const bookCover = new THREE.Mesh(box, matBookCv)
-  bookCover.scale.set(0.09, 0.22, 0.26)
-  book.add(bookCover)
-  const bookSpine = new THREE.Mesh(box, matBookSp)
-  bookSpine.scale.set(0.094, 0.024, 0.21)
-  bookSpine.position.y = 0.11
-  book.add(bookSpine)
-  visual.add(book)
+      ready = true
+    },
+    undefined,
+    (err) => {
+      // Loader uses console.error already; surface a clear booth-runtime warning.
+      console.error('[CitationRush] Failed to load /models/owl.glb — falling back to placeholder.', err)
+      // ready stays false; placeholder keeps rendering. Gameplay still works.
+    },
+  )
 
   return {
     root,
     visual,
-    body,
-    head,
-    leftWing,
-    rightWing,
-    leftFoot,
-    rightFoot,
-    leftPupil,
-    rightPupil,
-    tail,
-    cap,
-    book,
+    isReady: () => ready,
     disposables,
   }
 }
 
-// Animation tuning — pulled out for easy iteration without grep.
+// Animation tuning — values per the brief for the GLB-driven owl.
+// Procedural animation only (the model is static; no skeleton).
 export const OWL_ANIM = {
-  runCycleSeconds:     0.30,      // body bob period
-  runBobAmplitude:     0.06,      // ~5% of owl height (~1.2 units)
-  runFlapAmplitudeRad: 0.35,      // ~20° wing flap (brief said 20°)
-  runFootSwingZ:       0.16,      // forward/back foot swing — exaggerated for rear visibility
-  runHeadTiltRad:      0.05,
-  runTailWagRad:       0.09,      // ~5° tail wag in sync with bob (per brief)
-  jumpWingExtendRad:   0.55,
-  jumpForwardTiltRad:  0.30,
-  jumpFootTuckY:       0.18,
-  hitShakeDuration:    0.18,
-  hitShakeAmpRad:      0.18,
-  hitPupilScaleMul:    1.7,
+  // Run cycle: translate ±5% on Y at ~0.3s cycle.
+  runCycleSeconds:     0.30,
+  runBobAmplitude:     0.075,    // ≈5% of TARGET_HEIGHT (1.5)
+  // Lane-switch tilt: ~10° on Z toward direction of motion.
   laneTiltScale:       0.50,
-  laneTiltMaxRad:      0.20,
+  laneTiltMaxRad:      0.175,    // ~10°
   laneTiltLerp:        0.22,
+  // Jump: tilt ~10° forward at apex.
+  jumpForwardTiltRad:  0.175,    // ~10°
+  // Hit: ±10° shake on Z for ~180ms.
+  hitShakeDuration:    0.18,
+  hitShakeAmpRad:      0.175,    // ~10°
+  // Collect: scale bounce 1.0 → 1.1 → 1.0 over ~100ms.
+  collectBounceDuration: 0.10,
+  collectBouncePeak:     0.10,   // +10% peak scale
 }
