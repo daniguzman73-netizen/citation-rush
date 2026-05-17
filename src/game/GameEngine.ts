@@ -333,19 +333,17 @@ export class GameEngine {
   // ── Scene construction ────────────────────────────────────────────────────
 
   private buildLights() {
-    // Ambient + two directionals. The owl is the only thing in the scene that
-    // responds to lighting (floor + cards + decals are all unlit Basic/Sprite
-    // materials), so this is effectively the owl's key + fill rig.
-    const ambient = new THREE.AmbientLight(0xffffff, 0.55)
-    // Original directional — keep, lights the right side from above-back.
-    const keyDir = new THREE.DirectionalLight(0xffffff, 0.85)
-    keyDir.position.set(5, 10, 5)
-    // New soft key from upper-back-center — catches the camera-facing side of
-    // the owl (back of head, top of wings, back of body) so it has visible
-    // light/shadow separation instead of reading as a flat blob.
-    const cameraKey = new THREE.DirectionalLight(0xffffff, 0.45)
-    cameraKey.position.set(0, 8, 4)
-    this.scene.add(ambient, keyDir, cameraKey)
+    // Owl is the only object that responds to lighting (floor/cards/decals are
+    // all unlit Basic + Sprite). The previous three-light rig washed out the
+    // dimensional read; this rig is a single warm key + warm ambient so the
+    // owl has a clearly lit side and a still-warm shadow side.
+    const ambient = new THREE.AmbientLight(0xFFF1D8, 0.48)
+    // Strong warm directional from upper-right of the camera — lights the
+    // right side of the owl's silhouette from the camera's POV (creates the
+    // bright/shadow split visible from rear three-quarter).
+    const key = new THREE.DirectionalLight(0xFFF1D8, 1.35)
+    key.position.set(6, 9, 4)
+    this.scene.add(ambient, key)
   }
 
   private buildTrack() {

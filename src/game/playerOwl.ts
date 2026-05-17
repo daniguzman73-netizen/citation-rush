@@ -102,19 +102,23 @@ export function createOwl(): OwlRefs {
   const visual = new THREE.Group()
   root.add(visual)
 
-  // ── Body — sandy tan sphere, taller than wide; widest mid-low for pear ────
-  // Body sits SLIGHTLY LOW so the head visually covers the top portion of the
-  // body sphere, producing a tapered "narrower at top, wider at middle"
-  // silhouette without needing a custom geometry.
+  // ── Body — squat compressed sphere (more round than tall) ────────────────
+  // Reduced height ~25% from the previous pass and widened ~10% so the
+  // silhouette reads as a round, slightly-flat owl body rather than an
+  // upright cylinder/snowman base.
   const body = new THREE.Mesh(sphere, matBody)
-  body.scale.set(0.55, 0.62, 0.36)   // width 1.10, height 1.24, depth 0.72
-  body.position.y = 0.02
+  body.scale.set(0.605, 0.465, 0.42)   // width 1.21, height 0.93, depth 0.84
+  body.position.y = -0.10
   visual.add(body)
 
-  // ── Belly — cream patch on the FRONT of the body (visible during forward tilt) ─
+  // ── Belly — pale cream cap on the FRONT of the body, larger so the side
+  // edges peek into the rear-three-quarter view ──────────────────────────────
+  // The cream wraps further around the body sides than before. The cream
+  // sphere intersects the brown body sphere so the FRONT and FLANKS read
+  // cream, while the BACK (camera-facing) keeps the tan body color.
   const belly = new THREE.Mesh(sphere, matBelly)
-  belly.scale.set(0.42, 0.50, 0.12)
-  belly.position.set(0, -0.04, -0.30)
+  belly.scale.set(0.50, 0.40, 0.30)
+  belly.position.set(0, -0.10, -0.20)
   visual.add(belly)
 
   // ── Tail — darker wedge sticking BACK toward the camera, slightly down ────
@@ -127,59 +131,67 @@ export function createOwl(): OwlRefs {
   visual.add(tail)
 
   // ── Head group ────────────────────────────────────────────────────────────
-  // Head smaller than body width (~80%). Positioned to overlap the top of the
-  // body sphere, hiding it and creating the pear taper.
+  // Head sits low on the body — minimal gap. Body top is at owl-local y=+0.365;
+  // head bottom (with scale 0.44) lands at y=+0.18, which means the head's
+  // lower portion sits inside the body. Visually the head is "almost directly
+  // on the body" per the brief.
   const head = new THREE.Group()
-  head.position.set(0, 0.66, -0.04)
+  head.position.set(0, 0.62, -0.04)
   visual.add(head)
 
   const headSphere = new THREE.Mesh(sphere, matHead)
   headSphere.scale.set(0.44, 0.44, 0.44)
   head.add(headSphere)
 
-  // Face disc — pale cream nearly-flat disc on the head's front. Strong owl
-  // identifier from any angle that catches a sliver of the face.
+  // Face disc — pale cream nearly-flat disc on the head's front.
   const faceDisc = new THREE.Mesh(sphere, matFaceDisc)
   faceDisc.scale.set(0.38, 0.40, 0.06)
   faceDisc.position.set(0, 0.02, -0.40)
   head.add(faceDisc)
 
-  // ── Ear tufts — BIG cones on top of head, outward + back tilt ─────────────
-  // Sized assertively so they're unambiguously visible from the rear camera —
-  // these are the single strongest "this is an owl" cue from behind.
+  // ── Ear tufts — clearly visible above the cap ─────────────────────────────
+  // Two fixes vs the previous pass:
+  //   (1) rotation.z sign was inverted, tilting the tufts INWARD toward each
+  //       other rather than outward. Flipped here.
+  //   (2) The mortarboard (cap.width = 0.68) extends past the head edges and
+  //       was visually covering the previous tufts. Tufts are now scaled
+  //       taller (Y 0.55) and positioned higher (head-y 0.36 → apex extends
+  //       above the cap), with outward tilt strong enough that the tips
+  //       clear the cap silhouette.
   const earL = new THREE.Mesh(cone, matBody)
-  earL.scale.set(0.085, 0.32, 0.085)
-  earL.position.set(-0.20, 0.36, 0.04)
-  earL.rotation.set(-0.18, 0, -0.40)   // back + outward
+  earL.scale.set(0.10, 0.55, 0.10)
+  earL.position.set(-0.22, 0.36, 0.04)
+  earL.rotation.set(-0.12, 0, +0.38)   // back + OUTWARD (positive z for left = -X direction)
   head.add(earL)
 
   const earR = new THREE.Mesh(cone, matBody)
-  earR.scale.set(0.085, 0.32, 0.085)
-  earR.position.set(0.20, 0.36, 0.04)
-  earR.rotation.set(-0.18, 0, 0.40)
+  earR.scale.set(0.10, 0.55, 0.10)
+  earR.position.set(0.22, 0.36, 0.04)
+  earR.rotation.set(-0.12, 0, -0.38)   // back + OUTWARD (negative z for right = +X direction)
   head.add(earR)
 
-  // ── Eyes — large white spheres, set slightly to the sides ────────────────
-  const eyeR = 0.16
+  // ── Eyes — large white spheres, pushed further to the sides so a sliver of
+  // the head's lit-side eye is more likely to catch the camera during tilts ─
+  const eyeR = 0.17
   const leftEye = new THREE.Mesh(sphere, matEye)
   leftEye.scale.setScalar(eyeR)
-  leftEye.position.set(-0.20, 0.04, -0.42)
+  leftEye.position.set(-0.28, 0.04, -0.36)
   head.add(leftEye)
 
   const rightEye = new THREE.Mesh(sphere, matEye)
   rightEye.scale.setScalar(eyeR)
-  rightEye.position.set(0.20, 0.04, -0.42)
+  rightEye.position.set(0.28, 0.04, -0.36)
   head.add(rightEye)
 
   const pupilBase = 0.08
   const leftPupil = new THREE.Mesh(sphere, matPupil)
   leftPupil.scale.setScalar(pupilBase)
-  leftPupil.position.set(-0.20, 0.04, -0.52)
+  leftPupil.position.set(-0.28, 0.04, -0.46)
   head.add(leftPupil)
 
   const rightPupil = new THREE.Mesh(sphere, matPupil)
   rightPupil.scale.setScalar(pupilBase)
-  rightPupil.position.set(0.20, 0.04, -0.52)
+  rightPupil.position.set(0.28, 0.04, -0.46)
   head.add(rightPupil)
 
   // ── Beak — small orange cone, apex forward (-Z) ──────────────────────────
@@ -189,16 +201,16 @@ export function createOwl(): OwlRefs {
   beak.rotation.x = -Math.PI / 2
   head.add(beak)
 
-  // ── Wings — pivoted groups on each side. Outward angle baked into the wing
-  // mesh inside the pivot, so pivot.rotation remains "pure animation". ───────
+  // ── Wings — shorter (~50% of body height) and higher (attach near body top) ─
+  // Pivot sits just below the head, wing extends from there down to about the
+  // middle of the body. Resting outward tilt is baked into the wing mesh so
+  // pivot.rotation stays pure animation.
   const makeWing = (side: 1 | -1): THREE.Group => {
     const pivot = new THREE.Group()
-    pivot.position.set(side * 0.34, 0.20, 0)
+    pivot.position.set(side * 0.34, 0.28, 0)   // higher attachment (body top ~+0.365)
     const wing = new THREE.Mesh(sphere, matWing)
-    wing.scale.set(0.14, 0.50, 0.22)
-    wing.position.set(0, -0.42, 0.02)
-    // Resting outward tilt — wing tips angle away from the body so the
-    // silhouette clearly shows wing on each side, even before flapping.
+    wing.scale.set(0.14, 0.26, 0.22)            // length 0.52 ≈ 56% of body height
+    wing.position.set(0, -0.24, 0.02)
     wing.rotation.z = side * 0.22
     pivot.add(wing)
     visual.add(pivot)
@@ -207,15 +219,13 @@ export function createOwl(): OwlRefs {
   const leftWing  = makeWing(-1)
   const rightWing = makeWing(+1)
 
-  // ── Feet — orange pivoted groups, positioned to peek out behind body ──────
-  // Feet pivot center sits slightly behind body center (Z+0.06) so when the
-  // run cycle swings the back foot, it visibly extends past the body's rear
-  // silhouette.
+  // ── Feet — pivot just below new body bottom (-0.565), foot mesh longer in Z
+  // so the back-swung foot clearly extends past the body silhouette ─────────
   const makeFoot = (side: 1 | -1): THREE.Group => {
     const pivot = new THREE.Group()
-    pivot.position.set(side * 0.16, -0.66, 0.06)
+    pivot.position.set(side * 0.17, -0.62, 0.04)
     const foot = new THREE.Mesh(sphere, matFeet)
-    foot.scale.set(0.13, 0.07, 0.22)
+    foot.scale.set(0.13, 0.07, 0.28)
     pivot.add(foot)
     visual.add(pivot)
     return pivot
@@ -244,10 +254,11 @@ export function createOwl(): OwlRefs {
   cap.add(tasselBall)
   head.add(cap)
 
-  // ── Book tucked under LEFT wing (-X side). Positioned so the wing partly
-  // covers it from above but it peeks out at the rear. ─────────────────────
+  // ── Book tucked under LEFT wing — repositioned to peek out at the new
+  // (shorter) wing's bottom edge. Wing extends y ≈ +0.28 to ≈ 0, so book
+  // sits at y ≈ -0.18 with its top edge just below the wing's bottom. ──────
   const book = new THREE.Group()
-  book.position.set(-0.30, -0.12, 0.20)
+  book.position.set(-0.32, -0.18, 0.20)
   book.rotation.set(0, -0.10, -0.18)
   const bookCover = new THREE.Mesh(box, matBookCv)
   bookCover.scale.set(0.09, 0.22, 0.26)
