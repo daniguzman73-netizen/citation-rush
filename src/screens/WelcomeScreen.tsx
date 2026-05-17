@@ -4,6 +4,7 @@ import CreditsModal from '../components/CreditsModal'
 
 interface Props {
   onStart: () => void
+  onSkipToDemo: () => void
   onAdminOpen: () => void
 }
 
@@ -12,7 +13,7 @@ function shortInstitution(s: string): string {
   return s ? s.split(',')[0].trim() : ''
 }
 
-export default function WelcomeScreen({ onStart, onAdminOpen }: Props) {
+export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Props) {
   const [entries, setEntries] = useState<Run[] | null>(null)
   const [tickIdx, setTickIdx] = useState(0)
   const [creditsOpen, setCreditsOpen] = useState(false)
@@ -131,8 +132,19 @@ export default function WelcomeScreen({ onStart, onAdminOpen }: Props) {
           Press start →
         </button>
 
+        {/* Secondary route — bypasses the game and jumps straight to the
+            Nexus Extend demo (SPEC §4 Screen 1). No data is captured for
+            these visitors; they didn't opt into the game. */}
+        <button
+          type="button"
+          onPointerDown={onSkipToDemo}
+          className="mt-7 text-base text-gray-500 hover:text-gray-800 underline underline-offset-4 transition-colors"
+        >
+          Just show me the demo →
+        </button>
+
         {/* Stats row */}
-        <div className="mt-10 flex items-center gap-7 text-gray-600 text-lg">
+        <div className="mt-8 flex items-center gap-7 text-gray-600 text-lg">
           <span>⏱ 60 seconds</span>
           <span className="w-1 h-1 rounded-full bg-gray-700" />
           <span>🏃 3 hits = game over</span>

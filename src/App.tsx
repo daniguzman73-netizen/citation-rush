@@ -31,6 +31,9 @@ export default function App() {
   const pageHidden = usePageVisibility()
 
   const handleStart = useCallback(() => setScreen('intake'), [])
+  // Secondary route from the Welcome screen — skips intake / tutorial / game,
+  // jumps straight to the Nexus Extend demo. No player data captured.
+  const handleSkipToDemo = useCallback(() => setScreen('demo'), [])
 
   const handleIntakeSubmit = useCallback((info: PlayerInfo) => {
     setPlayer(info)
@@ -136,6 +139,7 @@ export default function App() {
       {screen === 'welcome' && (
         <WelcomeScreen
           onStart={handleStart}
+          onSkipToDemo={handleSkipToDemo}
           onAdminOpen={() => setAdminOpen(true)}
         />
       )}
