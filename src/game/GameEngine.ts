@@ -140,7 +140,7 @@ interface Particle {
   active: boolean
 }
 
-const PARTICLE_POOL_SIZE = 24
+const PARTICLE_POOL_SIZE = 32
 const SHAKE_DURATION = 0.18
 const HIT_FLASH_DURATION = 0.35
 
@@ -337,7 +337,7 @@ export class GameEngine {
       this.jumpT = 0
       // Trigger the feather burst + the brief takeoff stretch. Both are
       // purely visual; they don't change the arc, height, or collision.
-      this.emitFeathers(this.playerX, this.playerY, 10)
+      this.emitFeathers(this.playerX, this.playerY, 16)
       this.playerJumpStretchAmount = 1
       Audio.jump()
     }
@@ -530,8 +530,9 @@ export class GameEngine {
   }
 
   // Feather burst at jump start — emits from both wing areas of the owl.
-  // Particles drift outward and slightly downward, fade over ~600ms.
-  private emitFeathers(centerX: number, centerY: number, count = 10) {
+  // Bigger / wider / longer-lived pass per playtest feedback. Particles
+  // fan outward and slightly downward, fade over ~850ms.
+  private emitFeathers(centerX: number, centerY: number, count = 16) {
     let emitted = 0
     for (const p of this.particles) {
       if (p.active || emitted >= count) continue
@@ -542,15 +543,15 @@ export class GameEngine {
       // Alternate sides — half left wing, half right wing.
       const side = emitted % 2 === 0 ? -1 : 1
       p.sprite.position.set(
-        centerX + side * (0.20 + Math.random() * 0.10),
-        centerY + 0.30 + (Math.random() - 0.5) * 0.20,
-        (Math.random() - 0.5) * 0.20,
+        centerX + side * (0.25 + Math.random() * 0.15),
+        centerY + 0.30 + (Math.random() - 0.5) * 0.30,
+        (Math.random() - 0.5) * 0.30,
       )
-      // Drift outward (away from owl center) and gently downward.
-      p.vx = side * (1.2 + Math.random() * 0.8)
-      p.vy = -0.4 - Math.random() * 0.6
-      p.vz = (Math.random() - 0.5) * 1.0
-      p.maxLife = 0.6
+      // Wider outward spray + slightly more downward drift.
+      p.vx = side * (2.2 + Math.random() * 1.4)
+      p.vy = -0.4 - Math.random() * 0.9
+      p.vz = (Math.random() - 0.5) * 1.6
+      p.maxLife = 0.85
       p.life = p.maxLife
       emitted++
     }
@@ -575,8 +576,10 @@ export class GameEngine {
         p.sprite.position.y += p.vy * dt
         p.sprite.position.z += p.vz * dt
         const fade = Math.max(0, p.life / p.maxLife)
-        p.sprite.material.opacity = fade * 0.9
-        const s = 0.22 * (0.6 + 0.4 * fade)
+        p.sprite.material.opacity = fade * 0.95
+        // Bigger feathers — grows toward peak in first ~30% of life then
+        // shrinks slightly as they fade.
+        const s = 0.36 * (0.55 + 0.45 * fade)
         p.sprite.scale.set(s, s, 1)
       } else {
         p.vy -= 6 * dt   // heavy gravity for collect/hit bursts
@@ -975,9 +978,9 @@ export class GameEngine {
       // ~150ms decay independent of jump duration so the stretch feels punchy.
       this.playerJumpStretchAmount = Math.max(0, this.playerJumpStretchAmount - dt / 0.15)
       const amt = this.playerJumpStretchAmount
-      sx *= 1 + 0.05 * amt
-      sy *= 1 - 0.05 * amt
-      sz *= 1 + 0.05 * amt
+      sx *= 1 + 0.08 * amt
+      sy *= 1 - 0.08 * amt
+      sz *= 1 + 0.08 * amt
     }
 
     this.player.scale.set(sx, sy, sz)
