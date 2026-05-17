@@ -46,19 +46,22 @@ export interface OwlRefs {
   disposables: { dispose: () => void }[]
 }
 
-// Warm, light palette — should pop against the cream paper background.
+// Warm, light palette — bumped one stop lighter so the owl reads bright
+// against the cream paper. Relative relationships preserved: head lighter
+// than body, wing darker for silhouette contrast, tail darker still, belly +
+// face disc are the brightest cream values.
 const COLORS = {
-  body:       0xC8A878,   // sandy tan
-  belly:      0xE8D5B7,   // pale buff cream
-  head:       0xD4B896,   // slightly lighter tan than body
-  faceDisc:   0xF0E2C4,   // pale cream — barn-owl style facial disc
-  wing:       0x8B6F47,   // darker brown for contrast
-  tail:       0x6B5535,   // darkest brown
+  body:       0xDFC295,   // sandy buff — lifted from 0xC8A878
+  belly:      0xF0DEC2,   // pale cream — lifted from 0xE8D5B7
+  head:       0xE6CFA8,   // light tan — lifted from 0xD4B896
+  faceDisc:   0xF7ECD3,   // near-white cream — barn-owl facial disc
+  wing:       0xA48560,   // mid-brown — lifted from 0x8B6F47 (still darker than body for contrast)
+  tail:       0x856B47,   // darker brown — lifted from 0x6B5535
   eyeWhite:   0xF5F1E8,   // warm white
   pupil:      0x1F1A14,   // near-black
   beak:       0xE8A03A,   // orange
   feet:       0xE8A03A,   // orange
-  capDark:    0x1A2B45,   // deep navy (not pure black, reads warmer)
+  capDark:    0x1A2B45,   // deep navy
   tassel:     0xE0B83B,   // gold
   bookCover:  0x8B2730,   // deep red
   bookSpine:  0xD4AF37,   // gold spine
