@@ -61,6 +61,28 @@ export function createOwlScene(): OwlRefs {
     (gltf) => {
       const model = gltf.scene
 
+      // Brighten the artist's materials by ~15% without replacing them —
+      // preserves color choices but lifts the owl out of silhouette-dark
+      // territory against the cream paper. Clones each material first so
+      // the loader's cache stays untouched.
+      const tint = 1.15
+      const cloneAndTint = (m: THREE.Material): THREE.Material => {
+        const cloned = m.clone()
+        const colored = cloned as THREE.Material & { color?: THREE.Color }
+        if (colored.color) colored.color.multiplyScalar(tint)
+        disposables.push(cloned)
+        return cloned
+      }
+      model.traverse((node) => {
+        const mesh = node as THREE.Mesh
+        if (!mesh.isMesh) return
+        if (Array.isArray(mesh.material)) {
+          mesh.material = mesh.material.map(cloneAndTint)
+        } else {
+          mesh.material = cloneAndTint(mesh.material)
+        }
+      })
+
       // Measure → scale to target height → translate so feet land on floor.
       const preBox = new THREE.Box3().setFromObject(model)
       const preSize = new THREE.Vector3()

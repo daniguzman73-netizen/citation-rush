@@ -127,8 +127,11 @@ interface PoolEntry {
   baseScaleH: number
 }
 
+type ParticleKind = 'collect' | 'hit' | 'feather'
+
 interface Particle {
   sprite: THREE.Sprite
+  kind: ParticleKind
   vx: number
   vy: number
   vz: number
@@ -181,6 +184,7 @@ export class GameEngine {
   private particleTexture!: THREE.Texture
   private particleGoldMat!: THREE.SpriteMaterial
   private particleRedMat!: THREE.SpriteMaterial
+  private particleFeatherMat!: THREE.SpriteMaterial
 
   // Decorative scrolling page-number decals (Phase 6 polish — pure visual).
   private pageNumberDecals: PageNumberDecal[] = []
@@ -198,6 +202,10 @@ export class GameEngine {
   private playerRoll = 0
   // Hit-shake remaining (180ms wobble + pupil scale-up).
   private playerShakeT = 0
+  // Takeoff stretch progress (0..1, decays from 1 at jump start to 0 at apex).
+  // Drives a brief 1.05×0.95×1.05 non-uniform scale on the owl as the wings
+  // "extend" — silhouette cue that complements the feather burst.
+  private playerJumpStretchAmount = 0
 
   private state: GameState = initialState()
   private subs = new Set<Subscriber>()
@@ -273,6 +281,7 @@ export class GameEngine {
     this.playerBounceT = 0
     this.playerShakeT = 0
     this.playerRoll = 0
+    this.playerJumpStretchAmount = 0
     this.paused = false
     this.player.scale.set(1, 1, 1)
     this.player.rotation.set(0, 0, 0)
@@ -326,6 +335,10 @@ export class GameEngine {
   jump(): void {
     if (this.state.phase === 'running' && this.jumpT < 0) {
       this.jumpT = 0
+      // Trigger the feather burst + the brief takeoff stretch. Both are
+      // purely visual; they don't change the arc, height, or collision.
+      this.emitFeathers(this.playerX, this.playerY, 10)
+      this.playerJumpStretchAmount = 1
       Audio.jump()
     }
   }
@@ -334,15 +347,15 @@ export class GameEngine {
 
   private buildLights() {
     // Owl is the only object that responds to lighting (floor/cards/decals are
-    // all unlit Basic + Sprite). The previous three-light rig washed out the
-    // dimensional read; this rig is a single warm key + warm ambient so the
-    // owl has a clearly lit side and a still-warm shadow side.
-    const ambient = new THREE.AmbientLight(0xFFF1D8, 0.48)
-    // Strong warm directional from upper-right of the camera — lights the
-    // right side of the owl's silhouette from the camera's POV (creates the
-    // bright/shadow split visible from rear three-quarter).
-    const key = new THREE.DirectionalLight(0xFFF1D8, 1.35)
-    key.position.set(6, 9, 4)
+    // all unlit Basic + Sprite). Single warm key + warm ambient — bumped 25%
+    // brighter than the previous pass so the owl reads warm-and-present
+    // against the cream paper rather than as a dark silhouette.
+    const ambient = new THREE.AmbientLight(0xFFF1D8, 0.55)
+    const key = new THREE.DirectionalLight(0xFFF1D8, 1.70)
+    // Upper-front-right relative to the camera: above, to the right, and
+    // slightly toward the camera so the right side of the owl's back-facing
+    // silhouette is the lit side.
+    key.position.set(7, 10, 5)
     this.scene.add(ambient, key)
   }
 
@@ -469,13 +482,28 @@ export class GameEngine {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     })
+    // Feather burst — warm cream, normal (non-additive) blending so the
+    // feathers read as opaque tufts against the cream paper rather than
+    // glowing puffs.
+    this.particleFeatherMat = new THREE.SpriteMaterial({
+      map: this.particleTexture,
+      color: 0xF5EAD0,
+      transparent: true,
+      depthWrite: false,
+    })
 
     for (let i = 0; i < PARTICLE_POOL_SIZE; i++) {
       const sprite = new THREE.Sprite(this.particleGoldMat)
       sprite.scale.set(0.4, 0.4, 1)
       sprite.visible = false
       this.scene.add(sprite)
-      this.particles.push({ sprite, vx: 0, vy: 0, vz: 0, life: 0, maxLife: 0.5, active: false })
+      this.particles.push({
+        sprite,
+        kind: 'collect',
+        vx: 0, vy: 0, vz: 0,
+        life: 0, maxLife: 0.5,
+        active: false,
+      })
     }
   }
 
@@ -485,6 +513,7 @@ export class GameEngine {
     for (const p of this.particles) {
       if (p.active || emitted >= count) continue
       p.active = true
+      p.kind = kind
       p.sprite.visible = true
       p.sprite.material = mat
       p.sprite.position.copy(at)
@@ -500,6 +529,33 @@ export class GameEngine {
     }
   }
 
+  // Feather burst at jump start — emits from both wing areas of the owl.
+  // Particles drift outward and slightly downward, fade over ~600ms.
+  private emitFeathers(centerX: number, centerY: number, count = 10) {
+    let emitted = 0
+    for (const p of this.particles) {
+      if (p.active || emitted >= count) continue
+      p.active = true
+      p.kind = 'feather'
+      p.sprite.visible = true
+      p.sprite.material = this.particleFeatherMat
+      // Alternate sides — half left wing, half right wing.
+      const side = emitted % 2 === 0 ? -1 : 1
+      p.sprite.position.set(
+        centerX + side * (0.20 + Math.random() * 0.10),
+        centerY + 0.30 + (Math.random() - 0.5) * 0.20,
+        (Math.random() - 0.5) * 0.20,
+      )
+      // Drift outward (away from owl center) and gently downward.
+      p.vx = side * (1.2 + Math.random() * 0.8)
+      p.vy = -0.4 - Math.random() * 0.6
+      p.vz = (Math.random() - 0.5) * 1.0
+      p.maxLife = 0.6
+      p.life = p.maxLife
+      emitted++
+    }
+  }
+
   private updateParticles(dt: number) {
     for (const p of this.particles) {
       if (!p.active) continue
@@ -509,15 +565,29 @@ export class GameEngine {
         p.sprite.visible = false
         continue
       }
-      // gravity & integration
-      p.vy -= 6 * dt
-      p.sprite.position.x += p.vx * dt
-      p.sprite.position.y += p.vy * dt
-      p.sprite.position.z += p.vz * dt
-      const fade = Math.max(0, p.life / p.maxLife)
-      p.sprite.material.opacity = fade
-      const s = 0.4 * (0.5 + 0.5 * fade)
-      p.sprite.scale.set(s, s, 1)
+      // Feathers: gentle outward drift, light gravity, longer life. Per-particle
+      // Z velocity is randomized so the feathers fan out at varying depths,
+      // which reads as life-like motion despite the shared material precluding
+      // true per-particle in-plane rotation.
+      if (p.kind === 'feather') {
+        p.vy -= 1.6 * dt   // light gravity
+        p.sprite.position.x += p.vx * dt
+        p.sprite.position.y += p.vy * dt
+        p.sprite.position.z += p.vz * dt
+        const fade = Math.max(0, p.life / p.maxLife)
+        p.sprite.material.opacity = fade * 0.9
+        const s = 0.22 * (0.6 + 0.4 * fade)
+        p.sprite.scale.set(s, s, 1)
+      } else {
+        p.vy -= 6 * dt   // heavy gravity for collect/hit bursts
+        p.sprite.position.x += p.vx * dt
+        p.sprite.position.y += p.vy * dt
+        p.sprite.position.z += p.vz * dt
+        const fade = Math.max(0, p.life / p.maxLife)
+        p.sprite.material.opacity = fade
+        const s = 0.4 * (0.5 + 0.5 * fade)
+        p.sprite.scale.set(s, s, 1)
+      }
     }
   }
 
@@ -882,19 +952,35 @@ export class GameEngine {
     }
   }
 
-  // Brief scale-up bounce on the player when collecting a trusted citation —
-  // 100ms total, peaks at +10% scale halfway through (per spec).
-  private updatePlayerBounce(dt: number) {
-    const duration = OWL_ANIM.collectBounceDuration
+  // Consolidates the two scale animations on the player:
+  //  - Collect bounce: brief uniform scale-up to +10% over 100ms (per spec).
+  //  - Jump takeoff stretch: 1.05×0.95×1.05 non-uniform stretch that decays
+  //    from jump-start to apex, giving a "wings extended" silhouette cue on
+  //    the static GLB model (complements the feather burst).
+  // Both compose multiplicatively. Computed once per frame and applied to
+  // the player root.
+  private updatePlayerScale(dt: number) {
+    let sx = 1, sy = 1, sz = 1
+
+    // Collect bounce — uniform.
     if (this.playerBounceT > 0) {
       this.playerBounceT = Math.max(0, this.playerBounceT - dt)
-      const t = 1 - this.playerBounceT / duration
+      const t = 1 - this.playerBounceT / OWL_ANIM.collectBounceDuration
       const bump = Math.sin(t * Math.PI) * OWL_ANIM.collectBouncePeak
-      const s = 1 + bump
-      this.player.scale.set(s, s, s)
-    } else {
-      this.player.scale.set(1, 1, 1)
+      sx *= 1 + bump; sy *= 1 + bump; sz *= 1 + bump
     }
+
+    // Jump takeoff stretch — non-uniform, decays over the first half of the jump.
+    if (this.playerJumpStretchAmount > 0) {
+      // ~150ms decay independent of jump duration so the stretch feels punchy.
+      this.playerJumpStretchAmount = Math.max(0, this.playerJumpStretchAmount - dt / 0.15)
+      const amt = this.playerJumpStretchAmount
+      sx *= 1 + 0.05 * amt
+      sy *= 1 - 0.05 * amt
+      sz *= 1 + 0.05 * amt
+    }
+
+    this.player.scale.set(sx, sy, sz)
   }
 
   private deactivate(p: PoolEntry) {
@@ -933,7 +1019,7 @@ export class GameEngine {
       this.updateParticles(dt)
       this.updateShakeAndFlash(dt)
       this.updatePopups(dt)
-      this.updatePlayerBounce(dt)
+      this.updatePlayerScale(dt)
     }
     if (this.state.phase !== 'idle') this.emit()
 
