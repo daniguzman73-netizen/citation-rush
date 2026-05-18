@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { storage, type Run } from '../storage'
+import { Audio } from '../audio/Audio'
 import CreditsModal from '../components/CreditsModal'
 
 interface Props {
@@ -118,7 +119,13 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
         </p>
 
         <button
-          onPointerDown={onStart}
+          onPointerDown={() => {
+            // iOS Safari requires the AudioContext to be resumed inside a
+            // user-gesture handler — call this synchronously before any
+            // state change or navigation.
+            Audio.unlock()
+            onStart()
+          }}
           className="bg-[#5E33BF] hover:bg-[#4A25A0] active:scale-95 text-white font-black tracking-wide rounded-2xl shadow-2xl transition-all duration-100 select-none whitespace-nowrap"
           style={{
             fontSize: 28,
@@ -196,12 +203,13 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
           )}
         </div>
 
-        {/* Credits link — low visual weight, opens modal listing third-party assets */}
-        <div className="flex justify-center pb-2">
+        {/* Credits link — visible text stays small for low visual weight, but the
+            tappable area is bumped to 44×44 (Apple HIG) so it's hittable by finger. */}
+        <div className="flex justify-center">
           <button
             type="button"
             onPointerDown={() => setCreditsOpen(true)}
-            className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3"
           >
             Credits
           </button>

@@ -126,11 +126,11 @@ function CitationPill({ citation, revealed, onClick }: CitationPillProps) {
   if (!revealed) {
     return (
       <span className="inline-flex items-center gap-1 mx-0.5 align-baseline whitespace-nowrap">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md border bg-white text-xs font-medium text-gray-500"
+        <span className="inline-flex items-center px-2 py-2 rounded-md border bg-white text-xs font-medium text-gray-500"
               style={{ borderColor: '#E5E7EB' }}>
           {label}
         </span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md border bg-white text-xs font-semibold"
+        <span className="inline-flex items-center px-2 py-2 rounded-md border bg-white text-xs font-semibold"
               style={{ borderColor: '#FCA5A5', color: '#C8102E' }}>
           {citation.status === 'verified' ? '↗ Full Text' : '↗ View Page'}
         </span>
@@ -142,7 +142,7 @@ function CitationPill({ citation, revealed, onClick }: CitationPillProps) {
     <span className="inline-flex items-center gap-1 mx-0.5 align-baseline whitespace-nowrap">
       <button
         onPointerDown={onClick}
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-medium hover:brightness-95 transition-all"
+        className="inline-flex items-center gap-1.5 px-2 py-2 rounded-md border text-xs font-medium hover:brightness-95 transition-all"
         style={{ borderColor: status.pillBorder, background: status.pillBg, color: '#374151' }}
       >
         <span>{label}</span>
@@ -150,7 +150,7 @@ function CitationPill({ citation, revealed, onClick }: CitationPillProps) {
       </button>
       <button
         onPointerDown={onClick}
-        className="inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-semibold hover:bg-red-50 transition-all"
+        className="inline-flex items-center px-2 py-2 rounded-md border text-xs font-semibold hover:bg-red-50 transition-all"
         style={{ borderColor: '#FCA5A5', color: '#C8102E', background: 'white' }}
       >
         {citation.status === 'verified' ? '↗ Full Text' : '↗ View Page'}

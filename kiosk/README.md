@@ -141,6 +141,40 @@ From the panel you can:
 
 ---
 
+## iPad kiosk setup
+
+If the booth uses an iPad-class touchscreen instead of (or alongside) the
+Windows + Chrome kiosk above:
+
+1. **Open Safari to the deployed URL** (Vercel production URL, or the local
+   `http://<kiosk-ip>:4173` if you're running a preview server on a nearby
+   machine). The game is fully touch-playable — on-screen ← ↑ → buttons plus
+   swipe gestures (swipe left / right / up on the gameplay area).
+2. **Add to Home Screen** so it launches without Safari's chrome:
+   tap **Share** (square-and-arrow icon) → **Add to Home Screen** → name it
+   `Citation Rush` → **Add**. A standalone icon now lives on the home screen.
+3. **Open the Citation Rush home-screen icon** (not Safari) — this launches
+   the app in a Safari standalone view without URL bar or tab strip.
+4. **Enable Guided Access:**
+   - **Settings → Accessibility → Guided Access → On**.
+   - Set a passcode (booth staff will need this to exit).
+5. **Start the kiosk session** — open the Citation Rush icon, then
+   **triple-click the side / top button** to enter Guided Access. Confirm
+   the orientation is locked to **landscape** (rotate the iPad before
+   triple-clicking so it locks in that orientation).
+6. **To exit Guided Access** for admin tasks: triple-click the side button
+   and enter the passcode.
+
+> If audio still doesn't play after these steps, ensure the iPad ringer /
+> silent switch is set to **ring (not silent)** and the volume is up. iPad
+> Safari respects the hardware silent switch even inside Guided Access.
+
+The audio context unlocks automatically when the visitor taps the
+"Press start →" button on the Welcome screen — that's the iOS-required user
+gesture. No further setup needed for SFX.
+
+---
+
 ## Known gaps until a future phase
 
 - **No SQLite yet.** Per SPEC §8, the kiosk should use `better-sqlite3` at

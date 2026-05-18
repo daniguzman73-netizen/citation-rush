@@ -63,6 +63,21 @@ export const Audio = {
 
   toggle() { Audio.setMuted(!muted) },
 
+  // Call from inside a user-gesture handler (e.g. the Welcome "Press start"
+  // pointerdown) to unlock audio on iOS Safari. iOS starts the AudioContext
+  // in 'suspended' state and ONLY resumes it when resume() is invoked from
+  // within a synchronous gesture handler — lazy creation inside a RAF tick
+  // is silently ignored.
+  unlock() {
+    if (muted) return
+    const c = ensureCtx()
+    if (c && c.state === 'suspended') {
+      // ctx.resume() returns a Promise; we don't need to await — it just
+      // needs to be invoked synchronously from the gesture.
+      c.resume().catch(() => { /* iOS rejected; nothing we can do */ })
+    }
+  },
+
   subscribe(fn: (m: boolean) => void): () => void {
     listeners.add(fn)
     return () => { listeners.delete(fn) }
