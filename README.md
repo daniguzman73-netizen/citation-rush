@@ -46,9 +46,7 @@ A `better-sqlite3` backend writing to `./data/citation-rush.db` was specified in
 
 ## Admin panel
 
-Hidden admin panel: **5 taps within 3 seconds on the "Clarivate · Nexus Extend" lockup in the bottom-right of the Welcome screen** opens a password prompt. From there: leaderboard, aggregate stats (total / today / avg score / completion rate), audio toggle, CSV exports (all runs + email opt-ins), and leaderboard reset.
-
-Set the password via the `VITE_ADMIN_PASSWORD` env var at build time (e.g. in the Vercel project settings, or in `.env.local` for kiosk builds). Default if unset: `admin`. **Change this before booth deploy.**
+Hidden admin panel: **5 taps within 3 seconds on the top-left "Nexus Extend · by Clarivate" wordmark on the Welcome screen** opens it directly. No password. From there: leaderboard, aggregate stats (total / today / avg score / completion rate), audio toggle, CSV exports (all runs + email opt-ins), and leaderboard reset.
 
 ## Build phases
 

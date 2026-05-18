@@ -4,9 +4,10 @@ import { Audio } from '../audio/Audio'
 
 interface Props { onClose: () => void }
 
-const DEFAULT_PASSWORD = 'admin'
-const ENV_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD as string | undefined
-const PASSWORD = (ENV_PASSWORD && ENV_PASSWORD.trim()) || DEFAULT_PASSWORD
+// Admin entry is gated by the 5-tap gesture on the Welcome screen's wordmark.
+// There is intentionally no password gate beyond that — booth staff prefer
+// fast access on the show floor, and the gesture is already obscure enough
+// that visitors won't stumble into it.
 
 // CSV columns for the "all runs" export — matches the SPEC §8 Data model order.
 const RUN_COLUMNS = [
@@ -64,10 +65,6 @@ function fmtTimestamp(): string {
 }
 
 export default function AdminPanel({ onClose }: Props) {
-  const [auth, setAuth] = useState(false)
-  const [pwInput, setPwInput] = useState('')
-  const [pwError, setPwError] = useState(false)
-
   const [stats, setStats] = useState<AggregateStats | null>(null)
   const [topRuns, setTopRuns] = useState<Run[] | null>(null)
   const [muted, setMuted] = useState(Audio.isMuted())
@@ -80,21 +77,9 @@ export default function AdminPanel({ onClose }: Props) {
       .then(([s, r]) => { setStats(s); setTopRuns(r) })
   }
 
-  useEffect(() => {
-    if (!auth) return
-    refresh()
-  }, [auth])
-
-  const handleSubmitPassword = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (pwInput === PASSWORD) {
-      setAuth(true)
-      setPwError(false)
-    } else {
-      setPwError(true)
-      setPwInput('')
-    }
-  }
+  // Load stats + top runs immediately on mount — the 5-tap gesture is the
+  // only gate, so opening this panel implies the operator wants the data.
+  useEffect(() => { refresh() }, [])
 
   const exportAllRuns = async () => {
     const runs = await storage.getAllRuns()
@@ -132,29 +117,7 @@ export default function AdminPanel({ onClose }: Props) {
           >×</button>
         </div>
 
-        {!auth ? (
-          <form onSubmit={handleSubmitPassword} className="p-6">
-            <label className="block text-sm text-neutral-300">
-              Password
-              <input
-                type="password"
-                value={pwInput}
-                onChange={e => { setPwInput(e.target.value); setPwError(false) }}
-                autoFocus
-                autoComplete="current-password"
-                className="mt-2 w-full rounded-lg bg-neutral-800 border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </label>
-            {pwError && <div className="mt-2 text-sm text-red-400">Incorrect password.</div>}
-            <button
-              type="submit"
-              className="mt-4 px-5 py-2 rounded-full bg-purple-600 hover:bg-purple-500 text-sm font-semibold"
-            >
-              Unlock
-            </button>
-          </form>
-        ) : (
-          <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
             {/* Stats */}
             <section>
               <h4 className="text-xs uppercase tracking-widest text-neutral-400 mb-2">Stats</h4>
@@ -261,8 +224,7 @@ export default function AdminPanel({ onClose }: Props) {
                 </div>
               )}
             </section>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   )

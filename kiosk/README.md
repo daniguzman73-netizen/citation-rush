@@ -21,14 +21,9 @@ change later (see [`src/storage.ts`](../src/storage.ts)).
 3. **Project source** — clone the repo to a stable path (e.g.
    `C:\citation-rush`).
 4. **Dependencies** — from the project root: `npm install`.
-5. **Set the admin password** *(important — change from the default before
-   deploying to the booth)*. Create `.env.local` in the project root:
 
-   ```
-   VITE_ADMIN_PASSWORD=<pick something>
-   ```
-
-   This bakes into the build. Re-build (`npm run build`) any time you change it.
+> Admin access is gated by a 5-tap gesture on the Welcome screen's top-left
+> "Nexus Extend · by Clarivate" wordmark — no password required.
 
 ---
 
@@ -95,10 +90,9 @@ no way out.
 
 ## Admin panel
 
-While at the **Welcome** screen, **tap the "Clarivate · Nexus Extend" lockup
-in the bottom-right 5 times within 3 seconds**. A password prompt opens.
-Password comes from `VITE_ADMIN_PASSWORD` (default `admin` — change before
-deploy, see prerequisites).
+While at the **Welcome** screen, **tap the top-left "Nexus Extend · by
+Clarivate" wordmark 5 times within 3 seconds**. The admin panel opens
+directly — no password.
 
 From the panel you can:
 
