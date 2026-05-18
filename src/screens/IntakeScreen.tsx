@@ -54,7 +54,7 @@ export default function IntakeScreen({ initial, onSubmit, onBack }: Props) {
         className="w-full max-w-xl bg-white rounded-2xl p-8 border border-gray-200 shadow-xl"
       >
         <h2 className="text-3xl font-bold tracking-tight text-gray-900">Before you run</h2>
-        <p className="mt-2 text-sm text-gray-500">Two quick fields, then we go.</p>
+        <p className="mt-2 text-sm text-gray-500">Quick details before we go.</p>
 
         <label className="block mt-6 text-sm font-medium text-gray-700">
           Name
