@@ -93,7 +93,7 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
             the product wordmark. All vertically centered on a shared midline.
             5-tap admin gesture is on the whole lockup. */}
         <div
-          className="cursor-default select-none flex items-center gap-3"
+          className="cursor-default select-none flex items-center gap-2"
           onPointerDown={handleWordmarkTap}
         >
           <img
@@ -113,7 +113,10 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
       </div>
 
       {/* ── Main content ────────────────────────────────────────────────────────────── */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-16">
+      {/* pt-16 nudges the whole centered block (headline + subhead + button +
+          demo link + stats) downward by ~32px so it visually separates from
+          the top-left brand lockup. */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-16 pt-16">
 
         <h1
           className="font-black text-gray-900 leading-[1.05] tracking-tight mb-8 whitespace-nowrap"
