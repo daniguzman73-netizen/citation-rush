@@ -85,14 +85,15 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
       />
 
       {/* ── Top bar ─────────────────────────────────────────────────────────────────── */}
-      <div className="relative z-10 flex items-center justify-between px-12 pt-10 pb-0">
-        {/* Wordmark — text only, 5-tap admin gesture lives here */}
+      {/* Tucked into the top-left corner so the lockup reads as a small corner
+          header, visually separated from the centered CITATION RUSH title. */}
+      <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-0">
         {/* Horizontal "Clarivate | Nexus Extend" co-brand lockup — modeled on
             Clarivate | ProQuest. Logo on the left, thin vertical divider, then
             the product wordmark. All vertically centered on a shared midline.
             5-tap admin gesture is on the whole lockup. */}
         <div
-          className="cursor-default select-none flex items-center gap-4"
+          className="cursor-default select-none flex items-center gap-3"
           onPointerDown={handleWordmarkTap}
         >
           <img
@@ -101,8 +102,8 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
             className="h-9 w-auto select-none pointer-events-none"
             draggable={false}
           />
-          <span className="block w-px h-7 bg-gray-300" aria-hidden="true" />
-          <div className="text-gray-900 font-semibold text-2xl tracking-tight leading-none">
+          <span className="block w-px h-6 bg-gray-300" aria-hidden="true" />
+          <div className="text-gray-900 font-semibold text-xl tracking-tight leading-none">
             Nexus Extend
           </div>
         </div>
