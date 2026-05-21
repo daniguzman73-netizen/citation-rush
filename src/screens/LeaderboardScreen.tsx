@@ -21,10 +21,12 @@ function looksLikeEmail(v: string): boolean {
 export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone }: Props) {
   const [runs, setRuns] = useState<Run[] | null>(null)
 
-  // Email-capture local state. The run is ALREADY saved by this point —
-  // submitting this form only attaches the email/opt-in to the existing
-  // record via storage.updateRunEmail. Nothing here gates the leaderboard,
-  // the "Play again" / "Done" buttons, or the visitor's score.
+  // Email-capture local state. Two submission paths depending on arrival:
+  //   - highlightRunId is set (named / guest run) → attach email to that
+  //     existing run via storage.updateRunEmail.
+  //   - highlightRunId is null (demo-direct visitor) → save a NEW standalone
+  //     opt-in record via storage.saveLead with source='demo'.
+  // Either way: optional, never blocks anything.
   const [email, setEmail] = useState('')
   const [optIn, setOptIn] = useState(false)   // MUST default to false — privacy
   const [submitted, setSubmitted] = useState(false)
@@ -38,29 +40,39 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
 
   // Submission requires BOTH a valid email AND an affirmative consent tick.
   // The disabled button + unticked box make the consent requirement
-  // self-evident — no error copy needed. Because consent is required to
-  // submit, every captured email will have optedIn=true; we still write
-  // the field for clarity in the CSV export and future-proofing.
+  // self-evident — no error copy needed.
   const canSubmitEmail = !submitted && !submitting && looksLikeEmail(email) && optIn
 
   const handleSubmitEmail = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canSubmitEmail || !highlightRunId) return
+    if (!canSubmitEmail) return
     setSubmitting(true)
     try {
-      await storage.updateRunEmail(highlightRunId, email.trim(), optIn)
+      if (highlightRunId) {
+        // Named or guest run — attach to the existing record.
+        await storage.updateRunEmail(highlightRunId, email.trim(), optIn)
+      } else {
+        // Demo-direct path — no run exists, save a standalone opt-in lead.
+        await storage.saveLead(email.trim(), optIn)
+      }
       setSubmitted(true)
     } finally {
       setSubmitting(false)
     }
   }
 
-  // Show the email capture as long as there's a run record to attach it to.
-  // That's true for BOTH named players AND skipped-intake guests — guest
-  // runs are saved with blank name/institution so they have a record. The
-  // only case this is false is the "Show me Nexus in action" demo-only path
-  // where no game was played at all.
-  const showEmailCapture = highlightRunId !== null
+  // Always show the email capture on the final screen. Named players, guests,
+  // and demo-direct visitors all get the same opt-in opportunity. The submit
+  // handler routes to the right storage method based on whether a run record
+  // exists.
+  const showEmailCapture = true
+  const cameViaDemoDirect = highlightRunId === null
+
+  // Subhead text adapts: real players already have a leaderboard entry; demo-
+  // direct visitors don't, so the framing is "leave your email" instead.
+  const subhead = cameViaDemoDirect
+    ? 'Optional — leave your email to hear more about Nexus.'
+    : 'Optional — your score is already on the leaderboard.'
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center text-white px-6 bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 overflow-y-auto py-10">
@@ -77,7 +89,7 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
                   Get the latest on Nexus
                 </div>
                 <p className="mt-1 text-xs text-purple-200/80">
-                  Optional — your score is already on the leaderboard.
+                  {subhead}
                 </p>
 
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start">

@@ -10,8 +10,10 @@ interface Props { onClose: () => void }
 // that visitors won't stumble into it.
 
 // CSV columns for the "all runs" export — matches the SPEC §8 Data model order.
+// `source` is 'game' for real game plays (named or guest) and 'demo' for
+// demo-direct leads (visitor opted in without playing the game).
 const RUN_COLUMNS = [
-  'id', 'name', 'institution', 'email', 'optedIn',
+  'id', 'source', 'name', 'institution', 'email', 'optedIn',
   'startedAt', 'endedAt',
   'score', 'survivedSeconds', 'endedBy',
   'trusted_collected',
@@ -33,7 +35,7 @@ function quoteCsv(v: unknown): string {
 
 function runToRow(r: Run): string[] {
   return [
-    r.id, r.name, r.institution, r.email, r.optedIn ? '1' : '0',
+    r.id, r.source, r.name, r.institution, r.email, r.optedIn ? '1' : '0',
     new Date(r.startedAt).toISOString(),
     new Date(r.endedAt).toISOString(),
     String(r.score), String(r.survivedSeconds), r.endedBy,

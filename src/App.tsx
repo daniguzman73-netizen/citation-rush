@@ -67,6 +67,7 @@ export default function App() {
       const startedAt = runStartedAtRef.current || endedAt - GAME_DURATION_S * 1000
       const survivedSeconds = Math.max(0, Math.min(GAME_DURATION_S, Math.floor(GAME_DURATION_S - final.timeRemaining)))
       storage.saveRun({
+        source:      'game',
         name:        player.anonymous ? '' : player.name,
         institution: player.anonymous ? '' : player.institution,
         email:       player.email,

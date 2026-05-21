@@ -7,9 +7,21 @@ import type { RunStats } from '../game/GameEngine'
 
 export type EndedBy = 'time' | 'hits'
 
+// How the record entered storage. Used to distinguish demo-direct visitors
+// (no game played, just an email opt-in) from real game runs in the CSV
+// export. Legacy records written before this field existed are normalized
+// to 'game' on read.
+export type RunSource = 'game' | 'demo'
+
 // Persisted shape of a completed run. Matches SPEC.md §8 Data model.
+//
+// `source: 'demo'` records are demo-direct leads — they have no real game
+// data (score 0, blank name/institution, zeroed stats, startedAt === endedAt).
+// They exist solely to carry an email + optedIn flag captured on the final
+// screen after the demo-direct path.
 export interface Run {
   id: string
+  source: RunSource
   name: string
   institution: string
   email: string
@@ -44,4 +56,11 @@ export interface StorageBackend {
   // optedIn=false (player gave it but didn't consent to updates — respect
   // the distinction in the CSV export).
   updateRunEmail(id: string, email: string, optedIn: boolean): Promise<void>
+
+  // Save a standalone demo-direct opt-in (visitor reached the final screen
+  // via "Show me Nexus in action" without playing the game). Creates a Run
+  // record with source='demo', blank player + score + stats, just email and
+  // optedIn. Filtered out of the visible top-10 (blank name), included in
+  // the admin CSV export with source='demo' so it's distinguishable.
+  saveLead(email: string, optedIn: boolean): Promise<Run>
 }
