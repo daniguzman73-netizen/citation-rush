@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react'
 
-const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'wheel', 'pointerdown'] as const
+// Activity event list — anything in here resets the idle countdown.
+// `input` and `change` are explicit form-interaction signals: a visitor mid-way
+// through typing an email or ticking the consent checkbox must NOT get reset
+// out from under them. keydown + pointerdown already cover these in practice,
+// but adding the higher-level events is a belt-and-suspenders guarantee for
+// quirky touch interactions on iOS Safari.
+const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'wheel', 'pointerdown', 'input', 'change'] as const
 
 interface Options {
   /** When true, the idle timer runs. When false (e.g. during gameplay or admin), it's paused. */

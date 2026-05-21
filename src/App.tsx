@@ -105,8 +105,10 @@ export default function App() {
   const canvasVisible = screen === 'game' || screen === 'countdown'
 
   // SPEC §4 Screen 9 — return to attract mode after 30s of inactivity on a non-gameplay
-  // screen. Paused while: (a) actively playing, (b) on the welcome screen already, or
-  // (c) the admin panel is open (so booth staff aren't ejected mid-task).
+  // screen. Covers: intake, tutorial, results, demo (Nexus reveal), AND leaderboard
+  // (the final screen with the email-capture card). Paused while: (a) actively playing
+  // or counting down, (b) already on welcome, or (c) the admin panel is open
+  // (so booth staff aren't ejected mid-task).
   const idleEnabled = !adminOpen && screen !== 'welcome' && screen !== 'countdown' && screen !== 'game'
   useIdleReset({
     enabled: idleEnabled,
