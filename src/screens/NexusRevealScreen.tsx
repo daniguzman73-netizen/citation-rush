@@ -582,7 +582,7 @@ function NexusSidebar({
             </div>
           </div>
           <p className="text-gray-400 text-xs italic px-4 text-center leading-relaxed">
-            Checking against Web of Science and the Central Discovery Index…
+            Checking against the Central Discovery Index and Web of Science…
           </p>
         </div>
       </aside>
@@ -715,7 +715,7 @@ export default function NexusRevealScreen({ scenario, institution, onContinue }:
         }}
       >
         {scanning
-          ? '● Nexus is scanning citations against Web of Science and the Central Discovery Index…'
+          ? '● Nexus is scanning citations against the Central Discovery Index and Web of Science…'
           : `✓ Scan complete — ${scenario.citations.filter(c => c.status !== 'verified').length} unverified across ${scenario.citations.length} citations, in under 2 seconds`
         }
       </div>
