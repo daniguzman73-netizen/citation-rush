@@ -46,8 +46,13 @@ export const localStorageBackend: StorageBackend = {
   },
 
   async getTopRuns(limit: number): Promise<Run[]> {
+    // Guest runs (skipped-intake) are stored with blank name + institution so
+    // we can still attach an email to them, but they're filtered out of the
+    // visible top-10 — a nameless entry doesn't render meaningfully on the
+    // leaderboard. They still count in getAllRuns / getAggregateStats / CSV.
     return readAll()
       .slice()
+      .filter(r => r.name.trim().length > 0)
       .sort((a, b) => b.score - a.score || b.endedAt - a.endedAt)
       .slice(0, limit)
   },

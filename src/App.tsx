@@ -55,17 +55,22 @@ export default function App() {
 
     // Persist the run. Fire-and-forget — backend swallows storage errors and the
     // results screen renders from `final` directly, not from storage.
-    // Anonymous runs (skipped intake) are NOT saved — they'd clutter the leaderboard
-    // with nameless rows.
-    if (player && !player.anonymous && final.endedBy) {
+    //
+    // ALL runs are saved (including skipped-intake guests) so the
+    // leaderboard's email-capture card has a record to attach the email to.
+    // Guest runs are persisted with BLANK name + institution so the visible
+    // top-10 query can filter them out (see localStorageBackend.getTopRuns).
+    // They still count toward aggregate stats and appear in the admin CSV
+    // export — which is what gives guests a real opt-in channel.
+    if (player && final.endedBy) {
       const endedAt = Date.now()
       const startedAt = runStartedAtRef.current || endedAt - GAME_DURATION_S * 1000
       const survivedSeconds = Math.max(0, Math.min(GAME_DURATION_S, Math.floor(GAME_DURATION_S - final.timeRemaining)))
       storage.saveRun({
-        name: player.name,
-        institution: player.institution,
-        email: player.email,
-        optedIn: player.optedIn,
+        name:        player.anonymous ? '' : player.name,
+        institution: player.anonymous ? '' : player.institution,
+        email:       player.email,
+        optedIn:     player.optedIn,
         startedAt,
         endedAt,
         score: Math.max(0, final.score),

@@ -55,8 +55,11 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
     }
   }
 
-  // Only offer email capture when there's a run to attach it to. Anonymous
-  // (skipped-intake) visitors have no run record, so no email box.
+  // Show the email capture as long as there's a run record to attach it to.
+  // That's true for BOTH named players AND skipped-intake guests — guest
+  // runs are saved with blank name/institution so they have a record. The
+  // only case this is false is the "Show me Nexus in action" demo-only path
+  // where no game was played at all.
   const showEmailCapture = highlightRunId !== null
 
   return (
