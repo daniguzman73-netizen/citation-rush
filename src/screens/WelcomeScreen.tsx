@@ -87,12 +87,12 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
       {/* ── Top bar ─────────────────────────────────────────────────────────────────── */}
       <div className="relative z-10 flex items-center justify-between px-12 pt-10 pb-0">
         {/* Wordmark — text only, 5-tap admin gesture lives here */}
-        {/* Clarivate logo + Nexus Extend wordmark — a deliberate brand lockup:
-            Clarivate (parent) sits clearly larger on top, with breathing room
-            before the product name beneath it. 5-tap admin gesture is on the
-            whole stack. */}
+        {/* Horizontal "Clarivate | Nexus Extend" co-brand lockup — modeled on
+            Clarivate | ProQuest. Logo on the left, thin vertical divider, then
+            the product wordmark. All vertically centered on a shared midline.
+            5-tap admin gesture is on the whole lockup. */}
         <div
-          className="cursor-default select-none flex flex-col items-start gap-3"
+          className="cursor-default select-none flex items-center gap-4"
           onPointerDown={handleWordmarkTap}
         >
           <img
@@ -101,7 +101,10 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
             className="h-9 w-auto select-none pointer-events-none"
             draggable={false}
           />
-          <div className="text-gray-900 font-bold text-xl tracking-tight leading-tight">Nexus Extend</div>
+          <span className="block w-px h-7 bg-gray-300" aria-hidden="true" />
+          <div className="text-gray-900 font-semibold text-2xl tracking-tight leading-none">
+            Nexus Extend
+          </div>
         </div>
 
         {/* Top-right intentionally empty — ALA 2026 pill removed. */}

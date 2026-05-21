@@ -36,7 +36,12 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
     return () => { cancelled = true }
   }, [])
 
-  const canSubmitEmail = !submitted && !submitting && looksLikeEmail(email)
+  // Submission requires BOTH a valid email AND an affirmative consent tick.
+  // The disabled button + unticked box make the consent requirement
+  // self-evident — no error copy needed. Because consent is required to
+  // submit, every captured email will have optedIn=true; we still write
+  // the field for clarity in the CSV export and future-proofing.
+  const canSubmitEmail = !submitted && !submitting && looksLikeEmail(email) && optIn
 
   const handleSubmitEmail = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,9 +98,10 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
                 </div>
 
                 <label className="mt-3 flex items-start gap-3 text-xs text-purple-100/90 cursor-pointer select-none">
-                  {/* MUST default to unticked — privacy compliance.
-                      If left unticked, we still store the email but flag the
-                      consent as false in the CSV export. */}
+                  {/* MUST default to unticked — privacy compliance. Consent is
+                      now required to submit (Sign me up button is disabled
+                      while this is unchecked), so an unticked box means no
+                      submission happens at all. */}
                   <input
                     type="checkbox"
                     checked={optIn}
