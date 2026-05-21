@@ -66,6 +66,14 @@ export const localStorageBackend: StorageBackend = {
     writeAll([])
   },
 
+  async updateRunEmail(id: string, email: string, optedIn: boolean): Promise<void> {
+    const all = readAll()
+    const idx = all.findIndex(r => r.id === id)
+    if (idx < 0) return  // run not found — silent no-op (caller already saved)
+    all[idx] = { ...all[idx], email, optedIn }
+    writeAll(all)
+  },
+
   async getAggregateStats(): Promise<AggregateStats> {
     const all = readAll()
     if (all.length === 0) {

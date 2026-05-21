@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Citation Rush — 60-second endless-runner booth game for ALA 2026 (Nexus Extend).",
+  "description": "Citation Rush — 45-second endless-runner booth game for ALA 2026 (Nexus Extend).",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

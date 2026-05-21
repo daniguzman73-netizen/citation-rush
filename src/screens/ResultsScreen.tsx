@@ -48,7 +48,7 @@ export default function ResultsScreen({ player, result, onSeeNexus, onPlayAgain,
 
         <div className="mt-4 text-neutral-300">
           {fullRun
-            ? <>Survived <strong>60 seconds — full run!</strong> <span className="text-purple-300">+200 bonus</span></>
+            ? <>Survived <strong>{GAME_DURATION_S} seconds — full run!</strong> <span className="text-purple-300">+200 bonus</span></>
             : <>Survived <strong>{survived} seconds</strong></>
           }
         </div>

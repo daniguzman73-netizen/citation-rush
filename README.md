@@ -1,6 +1,6 @@
 # Citation Rush
 
-A 60-second endless-runner booth game for **ALA 2026**, built for Clarivate's Nexus Extend demo. Companion to [Citation Challenge](https://github.com/) (the diagnostic-puzzle game). This one's the arcade-reflex counterpart.
+A 45-second endless-runner booth game for **ALA 2026**, built for Clarivate's Nexus Extend demo. Companion to [Citation Challenge](https://github.com/) (the diagnostic-puzzle game). This one's the arcade-reflex counterpart.
 
 Player runs down a 3-lane track, collects **trusted citations** (Web of Science, peer-reviewed, library-accessible), and dodges four kinds of bad citations:
 

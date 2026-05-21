@@ -38,4 +38,10 @@ export interface StorageBackend {
   getEmailOptIns(): Promise<Run[]>              // subset with optedIn && email
   resetRuns(): Promise<void>
   getAggregateStats(): Promise<AggregateStats>
+  // Attach an email + opt-in flag to a previously-saved run. Used by the
+  // final-screen email capture, which runs AFTER the run is already on the
+  // leaderboard. No-op if the id isn't found. The email is stored even when
+  // optedIn=false (player gave it but didn't consent to updates — respect
+  // the distinction in the CSV export).
+  updateRunEmail(id: string, email: string, optedIn: boolean): Promise<void>
 }

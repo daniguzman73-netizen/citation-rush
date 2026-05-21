@@ -28,8 +28,12 @@ export default function TutorialScreen({ onDone }: Props) {
         </div>
         <div className={tileBase}>
           <div className="text-5xl">🎯</div>
-          <div className="mt-4 text-sm uppercase tracking-widest text-gray-500 text-center">
-            Collect green<br />Dodge red<br />3 hits = game over
+          {/* Per-line icons so the "neutral warning" ⚠ sits inline with the
+              Dodge instruction (not red-coded, not a color cluster). */}
+          <div className="mt-4 text-sm uppercase tracking-widest text-gray-500 text-center space-y-1">
+            <div>✅ Collect green</div>
+            <div>⚠ Dodge the rest</div>
+            <div>♥ 3 hits = game over</div>
           </div>
         </div>
       </div>

@@ -22,14 +22,14 @@ export const JUMP_PEAK = 1.6                // peak y above ground
 
 // Track speed (scrolling toward camera)
 export const TRACK_SPEED_START = 18
-export const TRACK_SPEED_END = 30           // at t=60s — final-20s push for a real frantic finale
+export const TRACK_SPEED_END = 30           // at t=GAME_DURATION_S — final 10s push for a real frantic finale
 
 // Spawn safety: don't spawn into a lane that already has an active object within this Z distance of SPAWN_Z.
 // Prevents pile-ups that the player cannot react to.
 export const MIN_SPAWN_GAP_Z = 6
 
 // Game rules
-export const GAME_DURATION_S = 60
+export const GAME_DURATION_S = 45
 export const MAX_HITS = 3
 export const FULL_RUN_BONUS = 200
 
@@ -87,10 +87,10 @@ export interface SpawnPhase {
 export const SPAWN_PHASES: readonly SpawnPhase[] = [
   // 0–20s: easy — predatory + paywalled only as bad, mostly trusted
   { untilSeconds: 20, spawnEverySeconds: 1.0,  trustedShare: 0.60, badTypes: ['predatory', 'paywalled'],         multiLaneChance: 0.0,  airborneChance: 0.0 },
-  // 20–40s: medium — all 4 bad types, occasional 2-lane
-  { untilSeconds: 40, spawnEverySeconds: 0.67, trustedShare: 0.50, badTypes: ALL_BAD_TYPES,                       multiLaneChance: 0.25, airborneChance: 0.0 },
-  // 40–60s: frantic — tighter cadence, more multi-lane, more airborne. The per-lane MIN_SPAWN_GAP_Z safety net still prevents unjumpable pile-ups.
-  { untilSeconds: 60, spawnEverySeconds: 0.45, trustedShare: 0.45, badTypes: ALL_BAD_TYPES,                       multiLaneChance: 0.50, airborneChance: 0.45 },
+  // 20–35s: medium — all bad types in rotation, occasional 2-lane
+  { untilSeconds: 35, spawnEverySeconds: 0.67, trustedShare: 0.50, badTypes: ALL_BAD_TYPES,                       multiLaneChance: 0.25, airborneChance: 0.0 },
+  // 35–45s: frantic finale — tighter cadence, more multi-lane, more airborne. The per-lane MIN_SPAWN_GAP_Z safety net still prevents unjumpable pile-ups.
+  { untilSeconds: 45, spawnEverySeconds: 0.45, trustedShare: 0.45, badTypes: ALL_BAD_TYPES,                       multiLaneChance: 0.50, airborneChance: 0.45 },
 ]
 
 // Pool size — one geometry, many instances; sized for worst-case 2/s × ~5s in flight × 2-lane = 20

@@ -8,7 +8,7 @@
 
 ## 1. Concept in one paragraph
 
-Citation Rush is a 60-second endless-runner game in the style of Subway Surfers. The player controls a character running down a 3-lane track, **collecting trusted citations** (Web of Science, peer-reviewed, library-accessible) and **dodging four types of bad citations** (predatory journals, unreviewed preprints, paywalled sources, hallucinated references). Three hits = game over. At the end of the run, the screen transitions to the Nexus Extend demo (same screen as Citation Challenge's reveal) with the framing: **"See how Nexus dodges bad citations for you."**
+Citation Rush is a 45-second endless-runner game in the style of Subway Surfers. The player controls a character running down a 3-lane track, **collecting trusted citations** (Web of Science, peer-reviewed, library-accessible) and **dodging four types of bad citations** (predatory journals, unreviewed preprints, paywalled sources, hallucinated references). Three hits = game over. At the end of the run, the screen transitions to the Nexus Extend demo (same screen as Citation Challenge's reveal) with the framing: **"See how Nexus dodges bad citations for you."**
 
 ---
 
@@ -62,22 +62,22 @@ The "preprints aren't *bad*, they're worth verifying" rule from Citation Challen
 ### Screen 2 — Player intake
 - Name (required)
 - Institution (autocomplete from predefined list — same list as Citation Challenge)
-- Email (optional)
-- Opt-in checkbox: *"Send me Nexus updates"* — **unticked by default**
-- Button: **"Let's run →"**
+- Button: **"Let's run →"** (or **"Skip →"** for a guest run that won't appear on the leaderboard)
+
+Email + opt-in have moved to the final (Leaderboard) screen — see Screen 8.
 
 ### Screen 3 — How to play (3-second tutorial)
 A single screen with three icons in a row:
 - **⬅️ ➡️** Switch lanes
 - **⬆️** Jump
-- 🎯 *"Collect green. Dodge red. 3 hits = game over."*
+- 🎯 *"✅ Collect green. ⚠ Dodge the rest. ♥ 3 hits = game over."*
 
 Auto-advances after 3 seconds OR on tap. **Do not over-explain the four bad types here** — the player will learn them by getting hit. The end-of-run breakdown teaches the taxonomy properly.
 
 ### Screen 4 — Countdown
 "3 ... 2 ... 1 ... GO" — full-screen, dramatic.
 
-### Screen 5 — The run (60 seconds OR 3 hits)
+### Screen 5 — The run (45 seconds OR 3 hits)
 
 **Layout:**
 - 3-lane track receding into perspective (Subway Surfers style)
@@ -93,8 +93,8 @@ Auto-advances after 3 seconds OR on tap. **Do not over-explain the four bad type
 
 **Spawn pacing:**
 - **0–20s (easy):** ~1 object per second, mostly trusted, 1-2 bad types in rotation (predatory + paywalled)
-- **20–40s (medium):** ~1.5 objects per second, all 4 bad types in rotation, occasional 2-lane spawns
-- **40–60s (fast):** ~2 objects per second, including airborne objects requiring jumps, multi-lane spawns
+- **20–35s (medium):** ~1.5 objects per second, all bad types in rotation, occasional 2-lane spawns
+- **35–45s (fast):** ~2 objects per second, including airborne objects requiring jumps, multi-lane spawns
 
 **Game ends when:**
 - Timer reaches 0, OR
@@ -107,7 +107,7 @@ Two-column layout (same pattern as Citation Challenge's results screen — keep 
 
 **Left column (~60%):**
 - "YOUR SCORE: [number]"
-- "Survived: 47 seconds" *(or "60 seconds — full run!")*
+- "Survived: 34 seconds" *(or "45 seconds — full run!")*
 - "Trusted citations collected: 18"
 - "Bad citations dodged: 12"
 - "Bad citations hit: 3"
@@ -131,6 +131,14 @@ The demo plays through the same guided steps as Citation Challenge (chat + sideb
 - Top 10 scores from Citation Rush (separate leaderboard from Citation Challenge)
 - Highlight the player's row if they made it
 - "Score: [N] · [Institution]"
+- **Optional email-capture card** above the top-10 list:
+  - Short prompt (e.g. *"Want to know when Nexus launches?"*)
+  - `type="email"` input
+  - Opt-in checkbox *"Send me updates about Nexus"* — **unticked by default**
+  - Submit button writes email + opt-in flag to the already-saved run record
+  - Confirmation state after submit; no double-submit
+  - Hidden for skipped-intake (guest) runs since there's no record to attach to
+  - The score / leaderboard placement is NEVER gated on email — purely additive
 - Button: **"Play again"** — back to Screen 2 (skip intake if same session within 5 minutes)
 - Button: **"Done"** — back to Screen 1 (attract mode)
 
@@ -188,10 +196,10 @@ Final score =
   − (predatory_hits × 100)
   − (hallucinated_hits × 100)
   − (retracted_hits × 75)
-  + (full_60s_bonus × 200)
+  + (full_run_bonus × 200)
 ```
 
-Full 60s bonus only applies if the player survives without 3-hit failure. That keeps the leaderboard top spots dominated by full runs, not lucky early failures.
+Full-run bonus only applies if the player survives the full 45 seconds without 3-hit failure. That keeps the leaderboard top spots dominated by full runs, not lucky early failures.
 
 ---
 
@@ -262,7 +270,7 @@ Citation Challenge target was ~90 seconds end-to-end per visitor. Citation Rush 
 - 10s intake
 - 3s tutorial
 - 3s countdown
-- 30-60s gameplay (early fails are common)
+- 25-45s gameplay (early fails are common)
 - 15s results + Nexus reveal CTA
 - *Demo viewing time varies — visitor can leave whenever*
 

@@ -87,18 +87,26 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
       {/* ── Top bar ─────────────────────────────────────────────────────────────────── */}
       <div className="relative z-10 flex items-center justify-between px-12 pt-10 pb-0">
         {/* Wordmark — text only, 5-tap admin gesture lives here */}
+        {/* Clarivate logo above the Nexus Extend wordmark. Logo file is
+            served from /images/clarivate-logo.png (Vite serves anything under
+            /public at the root). 5-tap admin gesture is on the whole stack. */}
         <div
-          className="cursor-default select-none"
+          className="cursor-default select-none flex flex-col items-start gap-2"
           onPointerDown={handleWordmarkTap}
         >
+          {/* TODO: confirm file is at public/images/clarivate-logo.png — image
+              will show a broken-image placeholder + alt text until then. */}
+          <img
+            src="/images/clarivate-logo.png"
+            alt="Clarivate"
+            className="h-7 w-auto select-none pointer-events-none"
+            draggable={false}
+          />
           <div className="text-gray-900 font-bold text-xl tracking-tight leading-tight">Nexus Extend</div>
-          <div className="text-gray-500 text-sm tracking-wide">by Clarivate</div>
         </div>
 
-        {/* Conference badge */}
-        <div className="flex items-center gap-3 border border-[#5E33BF]/30 bg-[#5E33BF]/8 rounded-xl px-5 py-2.5">
-          <span className="text-[#5E33BF] text-sm font-semibold tracking-widest uppercase">ALA 2026</span>
-        </div>
+        {/* Top-right intentionally empty — ALA 2026 pill removed. */}
+        <div />
       </div>
 
       {/* ── Main content ────────────────────────────────────────────────────────────── */}
@@ -147,12 +155,12 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
           onPointerDown={onSkipToDemo}
           className="mt-7 text-base text-gray-500 hover:text-gray-800 underline underline-offset-4 transition-colors"
         >
-          Just show me the demo →
+          Show me Nexus in action →
         </button>
 
         {/* Stats row */}
         <div className="mt-8 flex items-center gap-7 text-gray-600 text-lg">
-          <span>⏱ 60 seconds</span>
+          <span>⏱ 45 seconds</span>
           <span className="w-1 h-1 rounded-full bg-gray-700" />
           <span>🏃 3 hits = game over</span>
           <span className="w-1 h-1 rounded-full bg-gray-700" />

@@ -11,8 +11,6 @@ interface Props {
 export default function IntakeScreen({ initial, onSubmit, onBack }: Props) {
   const [name, setName] = useState(initial?.name ?? '')
   const [institution, setInstitution] = useState(initial?.institution ?? '')
-  const [email, setEmail] = useState(initial?.email ?? '')
-  const [optedIn, setOptedIn] = useState(initial?.optedIn ?? false)
   const [institutionFocused, setInstitutionFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
@@ -28,11 +26,15 @@ export default function IntakeScreen({ initial, onSubmit, onBack }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit) return
+    // Email + opt-in are collected on the final (Leaderboard) screen now —
+    // initialize them empty here so the storage layer's PlayerInfo shape is
+    // unchanged. The Leaderboard's email capture calls storage.updateRunEmail
+    // to attach them to the already-saved run record.
     onSubmit({
       name: name.trim(),
       institution: institution.trim(),
-      email: email.trim(),
-      optedIn,
+      email: '',
+      optedIn: false,
       anonymous: false,
     })
   }
@@ -139,28 +141,6 @@ export default function IntakeScreen({ initial, onSubmit, onBack }: Props) {
             )}
           </div>
         </div>
-
-        <label className="block mt-4 text-sm font-medium text-gray-700">
-          Email <span className="text-gray-400 font-normal">(optional)</span>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            autoComplete="off"
-            placeholder="you@library.edu"
-            className="mt-1 w-full rounded-lg bg-gray-50 border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
-        </label>
-
-        <label className="mt-4 flex items-start gap-3 text-sm text-gray-700 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={optedIn}
-            onChange={e => setOptedIn(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 bg-white text-purple-600 focus:ring-purple-500"
-          />
-          <span>Send me Nexus updates</span>
-        </label>
 
         <div className="mt-8 flex items-center justify-between gap-4">
           <button
