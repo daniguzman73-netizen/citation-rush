@@ -87,19 +87,18 @@ export default function WelcomeScreen({ onStart, onSkipToDemo, onAdminOpen }: Pr
       {/* ── Top bar ─────────────────────────────────────────────────────────────────── */}
       <div className="relative z-10 flex items-center justify-between px-12 pt-10 pb-0">
         {/* Wordmark — text only, 5-tap admin gesture lives here */}
-        {/* Clarivate logo above the Nexus Extend wordmark. Logo file is
-            served from /images/clarivate-logo.png (Vite serves anything under
-            /public at the root). 5-tap admin gesture is on the whole stack. */}
+        {/* Clarivate logo + Nexus Extend wordmark — a deliberate brand lockup:
+            Clarivate (parent) sits clearly larger on top, with breathing room
+            before the product name beneath it. 5-tap admin gesture is on the
+            whole stack. */}
         <div
-          className="cursor-default select-none flex flex-col items-start gap-2"
+          className="cursor-default select-none flex flex-col items-start gap-3"
           onPointerDown={handleWordmarkTap}
         >
-          {/* TODO: confirm file is at public/images/clarivate-logo.png — image
-              will show a broken-image placeholder + alt text until then. */}
           <img
             src="/images/clarivate-logo.png"
             alt="Clarivate"
-            className="h-7 w-auto select-none pointer-events-none"
+            className="h-9 w-auto select-none pointer-events-none"
             draggable={false}
           />
           <div className="text-gray-900 font-bold text-xl tracking-tight leading-tight">Nexus Extend</div>

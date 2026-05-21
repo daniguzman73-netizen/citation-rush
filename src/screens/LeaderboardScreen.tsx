@@ -66,7 +66,7 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
             {!submitted ? (
               <form onSubmit={handleSubmitEmail}>
                 <div className="text-sm md:text-base font-semibold text-white">
-                  Want to know when Nexus launches?
+                  Get the latest on Nexus
                 </div>
                 <p className="mt-1 text-xs text-purple-200/80">
                   Optional — your score is already on the leaderboard.
