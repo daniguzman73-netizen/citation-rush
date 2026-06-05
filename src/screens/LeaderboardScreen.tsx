@@ -75,8 +75,14 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
     : 'Optional — your score is already on the leaderboard.'
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center text-white px-6 bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 overflow-y-auto py-10">
-      <div className="w-full max-w-2xl">
+    // Scroll container is the outer div; the inner min-h-full wrapper centers
+    // the content when it fits the viewport, but grows downward and scrolls
+    // from the top when the email box + full leaderboard exceed screen height.
+    // (Using justify-center directly on a scroll container clips the top of
+    // overflowing content — this split avoids that.)
+    <div className="absolute inset-0 overflow-y-auto text-white bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950">
+      <div className="min-h-full flex flex-col items-center justify-center px-6 py-10">
+        <div className="w-full max-w-2xl">
         <div className="text-xs uppercase tracking-[0.3em] text-purple-300/80">Leaderboard</div>
         <h2 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Top runs</h2>
 
@@ -189,6 +195,7 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
           >
             Play again →
           </button>
+        </div>
         </div>
       </div>
     </div>
