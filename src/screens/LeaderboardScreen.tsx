@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import { storage, type Run } from '../storage'
 
 interface Props {
@@ -6,6 +7,12 @@ interface Props {
   onPlayAgain: () => void
   onDone: () => void
 }
+
+// Nexus Extend landing page. QR encodes the full URL (trailing slash, matching
+// Citation Challenge); the chip below shows the protocol-less form for visitors
+// who'd rather type it. Verified live June 2026.
+const NEXUS_URL_QR = 'https://clarivate.com/academia-government/nexus-extend/'
+const NEXUS_URL_DISPLAY = 'clarivate.com/academia-government/nexus-extend'
 
 // Very forgiving email validation — we don't want to reject odd-but-valid
 // academic addresses (foo+bar@dept.uni.edu, dotted locals, etc.). Just
@@ -61,11 +68,6 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
     }
   }
 
-  // Always show the email capture on the final screen. Named players, guests,
-  // and demo-direct visitors all get the same opt-in opportunity. The submit
-  // handler routes to the right storage method based on whether a run record
-  // exists.
-  const showEmailCapture = true
   const cameViaDemoDirect = highlightRunId === null
 
   // Subhead text adapts: real players already have a leaderboard entry; demo-
@@ -77,125 +79,163 @@ export default function LeaderboardScreen({ highlightRunId, onPlayAgain, onDone 
   return (
     // Scroll container is the outer div; the inner min-h-full wrapper centers
     // the content when it fits the viewport, but grows downward and scrolls
-    // from the top when the email box + full leaderboard exceed screen height.
-    // (Using justify-center directly on a scroll container clips the top of
-    // overflowing content — this split avoids that.)
+    // from the top when content exceeds screen height. (Using justify-center
+    // directly on a scroll container clips the top of overflowing content —
+    // this split avoids that.)
     <div className="absolute inset-0 overflow-y-auto text-white bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950">
       <div className="min-h-full flex flex-col items-center justify-center px-6 py-10">
-        <div className="w-full max-w-2xl">
-        <div className="text-xs uppercase tracking-[0.3em] text-purple-300/80">Leaderboard</div>
-        <h2 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Top runs</h2>
+        <div className="w-full max-w-5xl">
+          <div className="text-xs uppercase tracking-[0.3em] text-purple-300/80">Leaderboard</div>
+          <h2 className="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Top runs</h2>
 
-        {/* ── Email capture (optional, never blocks) ──────────────────────────── */}
-        {showEmailCapture && (
-          <div className="mt-6 rounded-2xl border border-purple-500/30 bg-purple-600/10 backdrop-blur p-5">
-            {!submitted ? (
-              <form onSubmit={handleSubmitEmail}>
-                <div className="text-sm md:text-base font-semibold text-white">
-                  Get the latest on Nexus
-                </div>
-                <p className="mt-1 text-xs text-purple-200/80">
-                  {subhead}
-                </p>
+          {/* Two columns: left = engagement cards (email + QR), right = leaderboard.
+              Mirrors the Citation Challenge final-screen split. (Citation Rush's
+              score/rank block lives on the earlier Results screen, so the left
+              column here holds the email opt-in above the QR card.) */}
+          <div className="mt-6 grid gap-6 md:grid-cols-5">
 
-                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start">
-                  <input
-                    type="email"
-                    inputMode="email"
-                    autoComplete="off"
-                    placeholder="you@library.edu"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    disabled={submitting}
-                    className="flex-1 rounded-lg bg-neutral-900 border border-white/15 px-3 py-2 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-60"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!canSubmitEmail}
-                    className="px-5 py-2 rounded-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white text-sm font-semibold disabled:bg-neutral-700 disabled:text-neutral-500 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-                  >
-                    Sign me up
-                  </button>
-                </div>
+            {/* ── Left column ───────────────────────────────────────────────── */}
+            <div className="md:col-span-2 flex flex-col gap-6">
 
-                <label className="mt-3 flex items-start gap-3 text-xs text-purple-100/90 cursor-pointer select-none">
-                  {/* MUST default to unticked — privacy compliance. Consent is
-                      now required to submit (Sign me up button is disabled
-                      while this is unchecked), so an unticked box means no
-                      submission happens at all. */}
-                  <input
-                    type="checkbox"
-                    checked={optIn}
-                    onChange={e => setOptIn(e.target.checked)}
-                    disabled={submitting}
-                    className="mt-0.5 h-4 w-4 rounded border-white/20 bg-neutral-900 text-purple-500 focus:ring-purple-500"
-                  />
-                  <span>Send me updates about Nexus</span>
-                </label>
-              </form>
-            ) : (
-              <div className="text-sm text-purple-100">
-                <span className="font-semibold text-white">Thanks!</span> We'll be in touch.
+              {/* Email capture (optional, never blocks) */}
+              <div className="rounded-2xl border border-purple-500/30 bg-purple-600/10 backdrop-blur p-5">
+                {!submitted ? (
+                  <form onSubmit={handleSubmitEmail}>
+                    <div className="text-sm md:text-base font-semibold text-white">
+                      Get the latest on Nexus
+                    </div>
+                    <p className="mt-1 text-xs text-purple-200/80">
+                      {subhead}
+                    </p>
+
+                    <div className="mt-4 flex flex-col gap-3">
+                      <input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="off"
+                        placeholder="you@library.edu"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        disabled={submitting}
+                        className="w-full rounded-lg bg-neutral-900 border border-white/15 px-3 py-2 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-60"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!canSubmitEmail}
+                        className="px-5 py-2 rounded-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white text-sm font-semibold disabled:bg-neutral-700 disabled:text-neutral-500 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                      >
+                        Sign me up
+                      </button>
+                    </div>
+
+                    <label className="mt-3 flex items-start gap-3 text-xs text-purple-100/90 cursor-pointer select-none">
+                      {/* MUST default to unticked — privacy compliance. Consent is
+                          required to submit (Sign me up is disabled while this is
+                          unchecked), so an unticked box means no submission. */}
+                      <input
+                        type="checkbox"
+                        checked={optIn}
+                        onChange={e => setOptIn(e.target.checked)}
+                        disabled={submitting}
+                        className="mt-0.5 h-4 w-4 rounded border-white/20 bg-neutral-900 text-purple-500 focus:ring-purple-500"
+                      />
+                      <span>Send me updates about Nexus</span>
+                    </label>
+                  </form>
+                ) : (
+                  <div className="text-sm text-purple-100">
+                    <span className="font-semibold text-white">Thanks!</span> We'll be in touch.
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
 
-        {/* ── Top-10 list ─────────────────────────────────────────────────────── */}
-        <div className="mt-6 rounded-2xl border border-white/10 bg-neutral-900/70 backdrop-blur overflow-hidden">
-          {runs === null && (
-            <div className="px-6 py-12 text-center text-neutral-500 italic">Loading…</div>
-          )}
-          {runs !== null && runs.length === 0 && (
-            <div className="px-6 py-12 text-center text-neutral-500 italic">
-              No runs yet — be the first.
+              {/* QR card — mirrors Citation Challenge's QR card. White card so the
+                  code scans reliably; rendered as SVG client-side (no network,
+                  kiosk-offline-safe). */}
+              <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center gap-4">
+                <div className="bg-white rounded-2xl p-2 border border-gray-200">
+                  <QRCodeSVG
+                    value={NEXUS_URL_QR}
+                    size={128}
+                    bgColor="#FFFFFF"
+                    fgColor="#111827"
+                    level="M"
+                    marginSize={0}
+                  />
+                </div>
+                <p className="text-center text-sm text-gray-500 leading-relaxed">
+                  Scan to learn more about<br />
+                  <strong className="text-gray-800">Nexus Extend</strong> for your library
+                </p>
+                <a
+                  href={NEXUS_URL_QR}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-[#5E33BF]/8 rounded-xl px-4 py-2 text-center hover:bg-[#5E33BF]/15 transition-colors"
+                >
+                  <span className="text-[#5E33BF] text-xs font-semibold break-all">{NEXUS_URL_DISPLAY}</span>
+                </a>
+              </div>
             </div>
-          )}
-          {runs !== null && runs.length > 0 && (
-            <ol className="divide-y divide-white/5">
-              {runs.map((r, i) => {
-                const me = r.id === highlightRunId
-                return (
-                  <li
-                    key={r.id}
-                    className={
-                      'flex items-baseline gap-4 px-6 py-3 ' +
-                      (me ? 'bg-purple-600/20 ring-1 ring-inset ring-purple-500/40' : '')
-                    }
-                  >
-                    <div className={`text-xl font-bold tabular-nums w-10 shrink-0 ${i < 3 ? 'text-yellow-300' : 'text-neutral-500'}`}>
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate font-medium">
-                        {r.name}{me && <span className="ml-2 text-xs uppercase tracking-wider text-purple-300">you</span>}
-                      </div>
-                      <div className="truncate text-xs text-neutral-400">{r.institution}</div>
-                    </div>
-                    <div className="text-2xl font-bold tabular-nums">{r.score}</div>
-                  </li>
-                )
-              })}
-            </ol>
-          )}
-        </div>
 
-        <div className="mt-8 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={onDone}
-            className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors"
-          >
-            Done
-          </button>
-          <button
-            type="button"
-            onClick={onPlayAgain}
-            className="px-6 py-3 rounded-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-base font-semibold transition-colors"
-          >
-            Play again →
-          </button>
-        </div>
+            {/* ── Right column — leaderboard ────────────────────────────────── */}
+            <div className="md:col-span-3">
+              <div className="rounded-2xl border border-white/10 bg-neutral-900/70 backdrop-blur overflow-hidden">
+                {runs === null && (
+                  <div className="px-6 py-12 text-center text-neutral-500 italic">Loading…</div>
+                )}
+                {runs !== null && runs.length === 0 && (
+                  <div className="px-6 py-12 text-center text-neutral-500 italic">
+                    No runs yet — be the first.
+                  </div>
+                )}
+                {runs !== null && runs.length > 0 && (
+                  <ol className="divide-y divide-white/5">
+                    {runs.map((r, i) => {
+                      const me = r.id === highlightRunId
+                      return (
+                        <li
+                          key={r.id}
+                          className={
+                            'flex items-baseline gap-4 px-6 py-3 ' +
+                            (me ? 'bg-purple-600/20 ring-1 ring-inset ring-purple-500/40' : '')
+                          }
+                        >
+                          <div className={`text-xl font-bold tabular-nums w-10 shrink-0 ${i < 3 ? 'text-yellow-300' : 'text-neutral-500'}`}>
+                            {i + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="truncate font-medium">
+                              {r.name}{me && <span className="ml-2 text-xs uppercase tracking-wider text-purple-300">you</span>}
+                            </div>
+                            <div className="truncate text-xs text-neutral-400">{r.institution}</div>
+                          </div>
+                          <div className="text-2xl font-bold tabular-nums">{r.score}</div>
+                        </li>
+                      )
+                    })}
+                  </ol>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onDone}
+              className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors"
+            >
+              Done
+            </button>
+            <button
+              type="button"
+              onClick={onPlayAgain}
+              className="px-6 py-3 rounded-full bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-base font-semibold transition-colors"
+            >
+              Play again →
+            </button>
+          </div>
         </div>
       </div>
     </div>
